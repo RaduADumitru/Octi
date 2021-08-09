@@ -1,10 +1,11 @@
 import pygame
 import os
 import copy
+import math
 
 pygame.init()
 pod_template = {'player': '',
-                'prongs': {'NW': False, 'N': False, 'NE': True, 'E': False,
+                'prongs': {'NW': False, 'N': False, 'NE': False, 'E': False,
                            'SE': False, 'S': False, 'SW': False, 'W': False},
                 'pos': ['', '']}  # empty pod
 board = {'A': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
@@ -104,26 +105,30 @@ def coords_to_pos(x, y):  # get pygame coordinates from position on board
 def pos_to_dir(col, line, x, y):  # get prong direction from square position and mouse position
     coords = pos_to_coords(col, line)
     pdir = ''
-    if (x - coords[0]) // (DIM_SQUARE // 3) == 0 & y - coords[1] // (DIM_SQUARE // 3) == 0:
+    minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
+    minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
+    print(minisquare_x,minisquare_y)
+    if minisquare_x == 0 and minisquare_y == 0:
         pdir = 'NW'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 1 & y - coords[1] // (DIM_SQUARE // 3) == 0:
+    elif minisquare_x == 1 and minisquare_y == 0:
         pdir = 'N'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 2 & y - coords[1] // (DIM_SQUARE // 3) == 0:
+    elif minisquare_x == 2 and minisquare_y == 0:
         pdir = 'NE'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 0 & y - coords[1] // (DIM_SQUARE // 3) == 1:
+    elif minisquare_x == 0 and minisquare_y == 1:
         pdir = 'W'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 2 & y - coords[1] // (DIM_SQUARE // 3) == 1:
+    elif minisquare_x == 2 and minisquare_y == 1:
         pdir = 'E'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 0 & y - coords[1] // (DIM_SQUARE // 3) == 2:
+    elif minisquare_x == 0 and minisquare_y == 2:
         pdir = 'SW'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 1 & y - coords[1] // (DIM_SQUARE // 3) == 2:
+    elif minisquare_x == 1 and minisquare_y == 2:
         pdir = 'S'
-    elif (x - coords[0]) // (DIM_SQUARE // 3) == 2 & y - coords[1] // (DIM_SQUARE // 3) == 2:
+    elif minisquare_x == 2 and minisquare_y == 2:
         pdir = 'SE'
     return pdir
 
 
-def prong_pos(col, line, dir):  #WIP
+
+def prong_pos(col, line, dir):  # WIP
     return None, None
 
 
@@ -206,7 +211,7 @@ def draw_board():  # draw game board
     pygame.display.update()
 
 
-def place_prong():  # TODO: fix prongs placed in wrong places and crashes
+def place_prong():
     mouse_pos = pygame.mouse.get_pos()
     pod_pos = coords_to_pos(mouse_pos[0], mouse_pos[1])
     print(pygame.mouse.get_pos())
