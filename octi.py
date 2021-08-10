@@ -40,6 +40,17 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Octi")
 
 # load images
+# TODO: transparent images on selection / hover
+def blit_alpha(target, source, location, opacity):
+    x = location[0]
+    y = location[1]
+    temp = pygame.Surface((source.get_width(), source.get_height())).convert()
+    temp.blit(target, (-x, -y))
+    temp.blit(source, (0, 0))
+    temp.set_alpha(opacity)
+    target.blit(temp, location)
+
+
 GREEN_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'green_pod.png'))
 GREEN_POD = pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90)
 RED_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'red_pod.png'))
@@ -148,7 +159,7 @@ def draw_prongs(col, line):  # place prong images on board
 def draw_pods():  # place pod images on board
     for col in board.keys():
         for line in board[col].keys():
-            if board[col][line] != {}:
+            if board[col][line]:
                 draw_prongs(col, line)
                 player = board[col][line]['player']
                 x, y = pos_to_coords(col, line)
@@ -211,9 +222,13 @@ def selection():
             sel = 'SE'
     return sel
 
-    minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
-    minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
 
+def move_pod(dest_col, dest_line):
+    col = data['sel_pod'][0]
+    line = data['sel_pod'][1]
+    pod = copy.deepcopy(board[col][line])
+    board[dest_col][dest_line] = pod
+    del board[col][line]
 
 #  functions to move pods; WIP
 def move_n(pod):
@@ -231,6 +246,22 @@ def move_w(pod):
 
 
 def move_sw(pod):
+    pass
+
+
+def move_s(pod):
+    pass
+
+
+def move_se(pod):
+    pass
+
+
+def move_e(pod):
+    pass
+
+
+def move_ne(pod):
     pass
 
 
