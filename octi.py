@@ -56,25 +56,22 @@ PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 # list of prongs; might not be necessary
 green_pods = []
 red_pods = []
-green_prongs = MAX_PRONGS
-red_prongs = MAX_PRONGS
 
-run = True
-turn = 'green'
+data = {'green_prongs': MAX_PRONGS,
+        'red_prongs': MAX_PRONGS,
+        'turn': 'green',
+        'run': True}
 
 
 def init_board():
-    turn = 'green'
-    global green_pods
-    global red_pods
-    global green_prongs
-    global red_prongs
+    data['turn'] = 'green'
+    data['green_prongs'] = MAX_PRONGS
+    data['red_prongs'] = MAX_PRONGS
     # place pods in starting positions
     for i in range(4):
         greenpod = copy.deepcopy(pod_template)
         greenpod['player'] = 'green'
         greenpod['pos'] = [chr(ord('A') + i + 1), '6']
-        green_pods.append(greenpod)
         col = greenpod['pos'][0]
         line = greenpod['pos'][1]
         board[col][line] = greenpod
@@ -82,7 +79,6 @@ def init_board():
         redpod = copy.deepcopy(pod_template)
         redpod['player'] = 'red'
         redpod['pos'] = [chr(ord('A') + i + 1), '2']
-        red_pods.append(redpod)
         col = redpod['pos'][0]
         line = redpod['pos'][1]
         board[col][line] = redpod
@@ -107,7 +103,6 @@ def pos_to_dir(col, line, x, y):  # get prong direction from square position and
     pdir = ''
     minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
     minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
-    print(minisquare_x,minisquare_y)
     if minisquare_x == 0 and minisquare_y == 0:
         pdir = 'NW'
     elif minisquare_x == 1 and minisquare_y == 0:
@@ -125,7 +120,6 @@ def pos_to_dir(col, line, x, y):  # get prong direction from square position and
     elif minisquare_x == 2 and minisquare_y == 2:
         pdir = 'SE'
     return pdir
-
 
 
 def prong_pos(col, line, dir):  # WIP
@@ -244,17 +238,13 @@ def move_sw(pod):
 
   # check for each player winning; WIP
 def check_win_green():
-    if red_pods == []:
-        pass
-    for pod in green_pods:
+    for pod in []:
         if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '2':
             pass
 
 
 def check_win_red():
-    if green_pods == []:
-        pass
-    for pod in red_pods:
+    for pod in []:
         if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '6':
             pass
 
