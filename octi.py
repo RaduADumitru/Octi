@@ -57,7 +57,10 @@ PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 data = {'green_prongs': MAX_PRONGS,
         'red_prongs': MAX_PRONGS,
         'turn': 'green',
-        'run': True}
+        'run': True,
+        'sel_pod': ['', ''],
+        'mouse_coords': [0, 0],
+        'mouse_square': ['A', '1']}
 
 
 def init_board():
@@ -95,9 +98,11 @@ def coords_to_pos(x, y):  # get pygame coordinates from position on board
     return col, line
 
 
-def pos_to_dir(col, line, x, y):  # get prong direction from square position and mouse position
+def pos_to_dir(col, line):  # get prong direction from square position and mouse position
     coords = pos_to_coords(col, line)
     pdir = ''
+    x = data['mouse_coords'][0]
+    y = data['mouse_coords'][1]
     minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
     minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
     if minisquare_x == 0 and minisquare_y == 0:
@@ -117,10 +122,6 @@ def pos_to_dir(col, line, x, y):  # get prong direction from square position and
     elif minisquare_x == 2 and minisquare_y == 2:
         pdir = 'SE'
     return pdir
-
-
-def prong_pos(col, line, dir):  # WIP
-    return None, None
 
 
 def draw_prongs(col, line):  # place prong images on board
@@ -145,12 +146,6 @@ def draw_prongs(col, line):  # place prong images on board
 
 
 def draw_pods():  # place pod images on board
-    # for green_pod in green_pods:  # place board
-    #     x, y = pos_to_coords(green_pod['pos'][0], green_pod['pos'][1])
-    #     WIN.blit(GREEN_POD, (x + POD_OFFSET, y + POD_OFFSET))
-    # for red_pod in red_pods:
-    #     x, y = pos_to_coords(red_pod['pos'][0], red_pod['pos'][1])
-    #     WIN.blit(RED_POD, (x + POD_OFFSET, y + POD_OFFSET))
     for col in board.keys():
         for line in board[col].keys():
             if board[col][line] != {}:
@@ -185,15 +180,39 @@ def draw_board():  # draw game board
     pygame.display.update()
 
 
-def place_prong():
-    mouse_pos = pygame.mouse.get_pos()
-    pod_pos = coords_to_pos(mouse_pos[0], mouse_pos[1])
-    print(pygame.mouse.get_pos())
-    print(pod_pos)
-    if board[pod_pos[0]][pod_pos[1]] != {}:
-        pdir = pos_to_dir(pod_pos[0], pod_pos[1], mouse_pos[0], mouse_pos[1])
-        if not board[pod_pos[0]][pod_pos[1]]['prongs'][pdir]:
-            board[pod_pos[0]][pod_pos[1]]['prongs'][pdir] = True
+def selection():
+    x = data['mouse_coords'][0]
+    y = data['mouse_coords'][1]
+    sel = 'none'
+    col = data['mouse_square'][0]
+    line = data['mouse_square'][1]
+    if board[col][line]:
+        coords = pos_to_coords(col, line)
+        minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
+        minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
+        if minisquare_x == 0 and minisquare_y == 0:
+            sel = 'NW'
+        elif minisquare_x == 1 and minisquare_y == 0:
+            sel = 'N'
+        elif minisquare_x == 2 and minisquare_y == 0:
+            sel = 'NE'
+        elif minisquare_x == 0 and minisquare_y == 1:
+            sel = 'W'
+        elif minisquare_x == 1 and minisquare_y == 1:
+            data['sel_pod'] = [col, line]
+            sel = 'pod'
+        elif minisquare_x == 2 and minisquare_y == 1:
+            sel = 'E'
+        elif minisquare_x == 0 and minisquare_y == 2:
+            sel = 'SW'
+        elif minisquare_x == 1 and minisquare_y == 2:
+            sel = 'S'
+        elif minisquare_x == 2 and minisquare_y == 2:
+            sel = 'SE'
+    return sel
+
+    minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
+    minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
 
 
 #  functions to move pods; WIP
@@ -213,6 +232,21 @@ def move_w(pod):
 
 def move_sw(pod):
     pass
+
+
+def end_turn():
+    data['sel_pod'] = ['', '']
+    if data['turn'] == 'green':
+        data['turn'] = 'red'
+    elif data['turn'] == 'red':
+        data['turn'] = 'green'
+
+
+def over_pod():
+    mousex = data['mouse_coords'][0]
+    mousey = data['mouse_coords'][1]
+    col, line = coords_to_pos(mousex, mousey)
+    # if board[col][line] and
 
 
 # check for each player winning; WIP
@@ -237,8 +271,21 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+            data['mouse_coords'] = pygame.mouse.get_pos()
+            x = data['mouse_coords'][0]
+            y = data['mouse_coords'][1]
+            col = data['mouse_square'][0]
+            line = data['mouse_square'][1]
+            data['mouse_square'] = list(coords_to_pos(x, y))
+            sel = selection()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                place_prong()
+                if sel not in ('none', 'pod'):
+                    board[col][line]['prongs'][sel] = True
+                elif sel == 'pod':
+                    data['sel_pod'] = [col, line]
+                    print(f'Pod {col}{line} selected')
+            if event.type == pygame.MOUSEBUTTONUP:
+                pass
         draw_board()
 
 
