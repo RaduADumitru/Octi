@@ -53,9 +53,6 @@ PRONG_DIAG1 = pygame.transform.scale(PRONG_DIAG1_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 PRONG_DIAG2_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag2.png'))
 PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
 
-# list of prongs; might not be necessary
-green_pods = []
-red_pods = []
 
 data = {'green_prongs': MAX_PRONGS,
         'red_prongs': MAX_PRONGS,
@@ -126,15 +123,6 @@ def prong_pos(col, line, dir):  # WIP
     return None, None
 
 
-def draw_test():  # for testing
-    # r_test = pygame.Rect(300, 300, 180, 300)
-    # pygame.draw.rect(WIN, ORANGE, r_test)
-    r_test = pygame.Surface((180, 300))
-    WIN.blit(r_test, (300, 300))
-    # r_test = pygame.transform.rotate(r_test, 45)
-    # WIN.blit(r_test, (300, 300))
-
-
 def draw_prongs(col, line):  # place prong images on board
     x, y = pos_to_coords(col, line)
     if board[col][line]['prongs']['N']:
@@ -154,13 +142,6 @@ def draw_prongs(col, line):  # place prong images on board
     if board[col][line]['prongs']['NE']:
         WIN.blit(PRONG_DIAG2, (x + DIM_SQUARE - PRONG_DIAG_SIZE, y))
     return
-
-
-def draw_allprongs():  # for testing
-    for green_pod in green_pods:
-        draw_prongs(green_pod['pos'][0], green_pod['pos'][1])
-    for red_pod in red_pods:
-        draw_prongs(red_pod['pos'][0], red_pod['pos'][1])
 
 
 def draw_pods():  # place pod images on board
@@ -198,7 +179,6 @@ def draw_board():  # draw game board
     for hliney in range(0, HEIGHT + DIM_SQUARE + LWIDTH, + DIM_SQUARE + LWIDTH):
         hline = pygame.Rect(0, hliney, WIDTH, LWIDTH)
         pygame.draw.rect(WIN, BLACK, hline)
-    # draw_allprongs()
     draw_pods()
     # draw_test()
 
@@ -235,8 +215,7 @@ def move_sw(pod):
     pass
 
 
-
-  # check for each player winning; WIP
+# check for each player winning; WIP
 def check_win_green():
     for pod in []:
         if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '2':
@@ -261,6 +240,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 place_prong()
         draw_board()
+
 
 if __name__ == '__main__':
     while True:
