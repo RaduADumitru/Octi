@@ -63,7 +63,8 @@ PRONG_DIAG1_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag1.png'))
 PRONG_DIAG1 = pygame.transform.scale(PRONG_DIAG1_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
 PRONG_DIAG2_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag2.png'))
 PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
-
+GREEN_PODS_LIST=[]
+RED_PODS_LIST=[]
 
 data = {'green_prongs': MAX_PRONGS,
         'red_prongs': MAX_PRONGS,
@@ -157,6 +158,8 @@ def draw_prongs(col, line):  # place prong images on board
 
 
 def draw_pods():  # place pod images on board
+    i = 0
+    j = 0
     for col in board.keys():
         for line in board[col].keys():
             if board[col][line]:
@@ -166,9 +169,16 @@ def draw_pods():  # place pod images on board
                 x += POD_OFFSET
                 y += POD_OFFSET
                 if player == 'green':
-                    WIN.blit(GREEN_POD, (x, y))
+                    GREEN_PODS_LIST.append(pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90))
+                    WIN.blit(GREEN_PODS_LIST[i], (x, y))
+                    board[col][line]['img'] = GREEN_PODS_LIST[i]
+                    i += 1
+                    
                 elif player == 'red':
-                    WIN.blit(RED_POD, (x, y))
+                    RED_PODS_LIST.append(pygame.transform.rotate(pygame.transform.scale(RED_POD_IMAGE, (DIM_POD, DIM_POD)), 90))
+                    WIN.blit(RED_PODS_LIST[j], (x, y))
+                    board[col][line]['img'] = RED_PODS_LIST[j]
+                    j += 1
 
 
 def draw_board():  # draw game board
@@ -296,6 +306,8 @@ def check_win_red():
 def main():
     init_board()
     run = True
+    last_col = -1
+    last_line = -1
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -315,6 +327,17 @@ def main():
                 elif sel == 'pod':
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
+                    x, y = pos_to_coords(col, line)
+                    board[col][line]['img'].set_alpha(100)
+                    pygame.display.update()
+                if last_col != -1 and last_line != -1:
+                    if last_col != col or last_line != line:
+                        board[last_col][last_line]['img'].set_alpha(255)
+                        pygame.display.update()
+                last_col = data['sel_pod'][0]
+                last_line = data['sel_pod'][1]
+            #alpha_surface.fill((0,0,0,0))
+            pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
                 pass
         draw_board()
