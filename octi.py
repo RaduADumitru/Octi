@@ -235,19 +235,20 @@ def selection():
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
+    print(board[col][line])
     pod = board[col][line]
     if(valid_move(data['sel_pod'][0],data['sel_pod'][1])):
         board[dest_col][dest_line] = pod
-        data['sel_pod'][0] = dest_col
-        data['sel_pod'][1] = dest_line
         del board[col][line]
 
 def valid_move(last_col,last_line):
+    print('b')
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
     pod = board[last_col][last_line]
+    print(board[last_col][last_line]['prongs'])
     if board[last_col][last_line]['prongs']['N'] == True and square_line - pod_line == -1:
         return 1
     elif board[last_col][last_line]['prongs']['NW'] == True and (square_line - pod_line == -1 and pod_col - square_col == 1):
@@ -342,14 +343,13 @@ def main():
                     board[col][line]['img'].set_alpha(100)
                     pygame.display.update()
                 if (last_col != -1 and last_line != -1) and selected:
+                    print('a')
                     if last_col != col or last_line != line:
                         board[last_col][last_line]['img'].set_alpha(255)
                         pygame.display.update()
                         move_pod(col,line)
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
-                print(last_col,last_line)
-
             #alpha_surface.fill((0,0,0,0))
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
