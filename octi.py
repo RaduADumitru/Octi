@@ -350,7 +350,6 @@ def main():
                         move_pod(col,line)
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
-
             #alpha_surface.fill((0,0,0,0))
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
