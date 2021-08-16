@@ -232,47 +232,57 @@ def selection():
             sel = 'SE'
     return sel
 
-
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
-    pod = copy.deepcopy(board[col][line])
-    board[dest_col][dest_line] = pod
-    del board[col][line]
+    print(board[col][line])
+    pod = board[col][line]
+    if(valid_move(data['sel_pod'][0],data['sel_pod'][1])):
+        board[dest_col][dest_line] = pod
+        del board[col][line]
 
-#  functions to move pods; WIP
+def valid_move(last_col,last_line):
+    print('b')
+    pod_col = ord(data['sel_pod'][0])
+    pod_line = ord(data['sel_pod'][1])
+    square_col = ord(data['mouse_square'][0])
+    square_line = ord(data['mouse_square'][1])
+    pod = board[last_col][last_line]
+    print(board[last_col][last_line]['prongs'])
+    if board[last_col][last_line]['prongs']['N'] == True and square_line - pod_line == -1:
+        return 1
+    elif board[last_col][last_line]['prongs']['NW'] == True and (square_line - pod_line == -1 and pod_col - square_col == 1):
+        return 1
+    elif board[last_col][last_line]['prongs']['W'] == True and pod_col - square_col == 1:
+        return 1
+    elif board[last_col][last_line]['prongs']['NE'] == True and (square_line - pod_line == -1 and pod_col - square_col == -1):
+        return 1
+    elif board[last_col][last_line]['prongs']['E'] == True and (pod_col - square_col == -1):
+        return 1
+    elif board[last_col][last_line]['prongs']['S'] == True and (square_line - pod_line == 1):
+        return 1
+    elif board[last_col][last_line]['prongs']['SE'] == True and (square_line - pod_line == 1 and pod_col - square_col == -1):
+        return 1
+    elif board[last_col][last_line]['prongs']['SW'] == True and (square_line - pod_line == 1 and pod_col - square_col == 1):
+        return 1
+    return 0
+    
+    
+       
+# functions to move pods; WIP
 def move_n(pod):
     line = chr(ord(pod['pos'][1]) - 1)
     pod['pos'][1] = chr(ord(pod['pos'][1]) - 1)
+    
 
 
 def move_nw(pod):
     pod['pos'][1] = chr(ord(pod['pos'][1]) - 1)
     pod['pos'][0] = chr(ord(pod['pos'][0]) - 1)
-
+    
 
 def move_w(pod):
     pod['pos'][0] = chr(ord(pod['pos'][0]) - 1)
-
-
-def move_sw(pod):
-    pass
-
-
-def move_s(pod):
-    pass
-
-
-def move_se(pod):
-    pass
-
-
-def move_e(pod):
-    pass
-
-
-def move_ne(pod):
-    pass
 
 
 def end_turn():
@@ -308,6 +318,7 @@ def main():
     run = True
     last_col = -1
     last_line = -1
+    selected = 0
     while run:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -325,17 +336,21 @@ def main():
                 if sel not in ('none', 'pod'):
                     board[col][line]['prongs'][sel] = True
                 elif sel == 'pod':
+                    selected = 1
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
                     x, y = pos_to_coords(col, line)
                     board[col][line]['img'].set_alpha(100)
                     pygame.display.update()
-                if last_col != -1 and last_line != -1:
+                if (last_col != -1 and last_line != -1) and selected:
+                    print('a')
                     if last_col != col or last_line != line:
                         board[last_col][last_line]['img'].set_alpha(255)
                         pygame.display.update()
+                        move_pod(col,line)
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
+
             #alpha_surface.fill((0,0,0,0))
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
