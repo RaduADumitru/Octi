@@ -262,7 +262,9 @@ def deselect():
     data['sel_pod'] = ['', '']
 
 
-def valid_move(last_col,last_line):
+def valid_move():
+    last_col = data['sel_pod'][0]
+    last_line = data['sel_pod'][1]
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
@@ -301,7 +303,7 @@ def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     pod = board[col][line]
-    if valid_move(data['sel_pod'][0], data['sel_pod'][1]):
+    if valid_move():
         board[dest_col][dest_line] = copy.deepcopy(pod)
         board[col][line] = {}
         end_turn()
