@@ -40,7 +40,6 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Octi")
 
 # load images
-# TODO: transparent images on selection / hover
 def blit_alpha(target, source, location, opacity):
     x = location[0]
     y = location[1]
