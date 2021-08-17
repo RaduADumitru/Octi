@@ -242,7 +242,6 @@ def move_pod(dest_col, dest_line):
         data['sel_pod'][0] = dest_col
         data['sel_pod'][1] = dest_line
         del board[col][line]
-
 def valid_move(last_col,last_line):
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
