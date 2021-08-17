@@ -269,21 +269,21 @@ def valid_move():
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
-    if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1:
+    if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
         return 1
-    elif board[last_col][last_line]['prongs']['NW'] is True and (square_line - pod_line == -1 and pod_col - square_col == 1):
+    elif board[last_col][last_line]['prongs']['NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
         return 1
-    elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1:
+    elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1 and pod_line == square_line:
         return 1
-    elif board[last_col][last_line]['prongs']['NE'] is True and (square_line - pod_line == -1 and pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
         return 1
-    elif board[last_col][last_line]['prongs']['E'] is True and (pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['E'] is True and pod_col - square_col == -1 and square_line == pod_line:
         return 1
-    elif board[last_col][last_line]['prongs']['S'] is True and (square_line - pod_line == 1):
+    elif board[last_col][last_line]['prongs']['S'] is True and square_line - pod_line == 1 and pod_col == square_col:
         return 1
-    elif board[last_col][last_line]['prongs']['SE'] is True and (square_line - pod_line == 1 and pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
         return 1
-    elif board[last_col][last_line]['prongs']['SW'] is True and (square_line - pod_line == 1 and pod_col - square_col == 1):
+    elif board[last_col][last_line]['prongs']['SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
         return 1
     return 0
 
@@ -299,7 +299,6 @@ def end_turn():
 
 
 def move_pod(dest_col, dest_line):
-    # TODO: fix bug: pieces can sometimes be moved excessive distances (eg. like horses in chess)
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     pod = board[col][line]
