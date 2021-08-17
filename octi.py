@@ -207,48 +207,47 @@ def selection():
     sel = 'none'
     col = data['mouse_square'][0]
     line = data['mouse_square'][1]
-    if board[col][line]:
-        coords = pos_to_coords(col, line)
-        minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
-        minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
-        if minisquare_x == 0 and minisquare_y == 0:
-            sel = 'NW'
-        elif minisquare_x == 1 and minisquare_y == 0:
-            sel = 'N'
-        elif minisquare_x == 2 and minisquare_y == 0:
-            sel = 'NE'
-        elif minisquare_x == 0 and minisquare_y == 1:
-            sel = 'W'
-        elif minisquare_x == 1 and minisquare_y == 1:
-            data['sel_pod'] = [col, line]
-            sel = 'pod'
-        elif minisquare_x == 2 and minisquare_y == 1:
-            sel = 'E'
-        elif minisquare_x == 0 and minisquare_y == 2:
-            sel = 'SW'
-        elif minisquare_x == 1 and minisquare_y == 2:
-            sel = 'S'
-        elif minisquare_x == 2 and minisquare_y == 2:
-            sel = 'SE'
+    if col in board and line in board[col]:
+        if board[col][line]:
+            coords = pos_to_coords(col, line)
+            minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
+            minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
+            if minisquare_x == 0 and minisquare_y == 0:
+                sel = 'NW'
+            elif minisquare_x == 1 and minisquare_y == 0:
+                sel = 'N'
+            elif minisquare_x == 2 and minisquare_y == 0:
+                sel = 'NE'
+            elif minisquare_x == 0 and minisquare_y == 1:
+                sel = 'W'
+            elif minisquare_x == 1 and minisquare_y == 1:
+                data['sel_pod'] = [col, line]
+                sel = 'pod'
+            elif minisquare_x == 2 and minisquare_y == 1:
+                sel = 'E'
+            elif minisquare_x == 0 and minisquare_y == 2:
+                sel = 'SW'
+            elif minisquare_x == 1 and minisquare_y == 2:
+                sel = 'S'
+            elif minisquare_x == 2 and minisquare_y == 2:
+                sel = 'SE'
     return sel
 
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
-    print(board[col][line])
     pod = board[col][line]
     if(valid_move(data['sel_pod'][0],data['sel_pod'][1])):
         board[dest_col][dest_line] = pod
+        data['sel_pod'][0] = dest_col
+        data['sel_pod'][1] = dest_line
         del board[col][line]
-
 def valid_move(last_col,last_line):
-    print('b')
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
     pod = board[last_col][last_line]
-    print(board[last_col][last_line]['prongs'])
     if board[last_col][last_line]['prongs']['N'] == True and square_line - pod_line == -1:
         return 1
     elif board[last_col][last_line]['prongs']['NW'] == True and (square_line - pod_line == -1 and pod_col - square_col == 1):
@@ -341,15 +340,17 @@ def main():
                     print(f'Pod {col}{line} selected')
                     x, y = pos_to_coords(col, line)
                     board[col][line]['img'].set_alpha(100)
+                    #blit_alpha(WIN, board[col][line]['img'],(x,y), 100)
                     pygame.display.update()
                 if (last_col != -1 and last_line != -1) and selected:
-                    print('a')
                     if last_col != col or last_line != line:
                         board[last_col][last_line]['img'].set_alpha(255)
                         pygame.display.update()
                         move_pod(col,line)
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
+                print(last_col,last_line)
+
             #alpha_surface.fill((0,0,0,0))
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
