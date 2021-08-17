@@ -15,7 +15,27 @@ board = {'A': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'E': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'F': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}}}  # empty board
 
+
 MAX_PRONGS = 12  # number of prongs each player starts with
+data = {'green_prongs': MAX_PRONGS,
+        'red_prongs': MAX_PRONGS,
+        'turn': 'green',
+        'run': True,
+        'sel_pod': ['', ''],
+        'mouse_coords': [0, 0],
+        'mouse_square': ['A', '1']}
+
+DIR_DATA = {'N': 'PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y)',
+            'NW': 'PRONG_DIAG1, (x, y)',
+            'W': 'PRONG_HORIZ, (x, y + DIM_SQUARE // 2 - PRONG_WIDTH // 2)',
+            'SW': 'PRONG_DIAG2, (x, y + DIM_SQUARE - PRONG_DIAG_SIZE)',
+            'S': 'PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y + DIM_SQUARE - PRONG_LENGTH)',
+            'SE': 'PRONG_DIAG1, (x + DIM_SQUARE - PRONG_DIAG_SIZE, y + DIM_SQUARE - PRONG_DIAG_SIZE)',
+            'E': 'PRONG_HORIZ, (x + DIM_SQUARE - PRONG_LENGTH, y + DIM_SQUARE // 2 - PRONG_WIDTH // 2)',
+            'NE': 'PRONG_DIAG2, (x + DIM_SQUARE - PRONG_DIAG_SIZE, y)'}
+
+DIRECTIONS = ('N', 'NW', 'W', 'SW', 'S', 'SE', 'E', 'NE')
+
 LWIDTH = 4  # width of line on board
 DIM_SQUARE = 90  # dimension of square
 DIM_POD = 60  # dimension of pod
@@ -39,7 +59,7 @@ FPS = 60
 clock = pygame.time.Clock()
 pygame.display.set_caption("Octi")
 
-# load images
+
 def blit_alpha(target, source, location, opacity):
     x = location[0]
     y = location[1]
@@ -50,6 +70,7 @@ def blit_alpha(target, source, location, opacity):
     target.blit(temp, location)
 
 
+# load images
 GREEN_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'green_pod.png'))
 GREEN_POD = pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90)
 RED_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'red_pod.png'))
@@ -62,16 +83,13 @@ PRONG_DIAG1_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag1.png'))
 PRONG_DIAG1 = pygame.transform.scale(PRONG_DIAG1_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
 PRONG_DIAG2_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag2.png'))
 PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
-GREEN_PODS_LIST=[]
-RED_PODS_LIST=[]
 
-data = {'green_prongs': MAX_PRONGS,
-        'red_prongs': MAX_PRONGS,
-        'turn': 'green',
-        'run': True,
-        'sel_pod': ['', ''],
-        'mouse_coords': [0, 0],
-        'mouse_square': ['A', '1']}
+# alpha values for transparency
+PRONG_HOVEROVERPOD_ALPHA = 192
+PRONG_HOVEROVERPLACEMENT_ALPHA = 64
+PRONG_SELECT_ALPHA = 128
+POD_HOVER_ALPHA = 192
+POD_SELECT_ALPHA = 128
 
 
 def init_board():
@@ -112,8 +130,8 @@ def coords_to_pos(x, y):  # get pygame coordinates from position on board
 def pos_to_dir(col, line):  # get prong direction from square position and mouse position
     coords = pos_to_coords(col, line)
     pdir = ''
-    x = data['mouse_coords'][0]
-    y = data['mouse_coords'][1]
+    x = int(data['mouse_coords'][0])
+    y = int(data['mouse_coords'][1])
     minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
     minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
     if minisquare_x == 0 and minisquare_y == 0:
@@ -137,28 +155,34 @@ def pos_to_dir(col, line):  # get prong direction from square position and mouse
 
 def draw_prongs(col, line):  # place prong images on board
     x, y = pos_to_coords(col, line)
-    if board[col][line]['prongs']['N']:
-        WIN.blit(PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y))
-    if board[col][line]['prongs']['NW']:
-        WIN.blit(PRONG_DIAG1, (x, y))
-    if board[col][line]['prongs']['W']:
-        WIN.blit(PRONG_HORIZ, (x, y + DIM_SQUARE // 2 - PRONG_WIDTH // 2))
-    if board[col][line]['prongs']['SW']:
-        WIN.blit(PRONG_DIAG2, (x, y + DIM_SQUARE - PRONG_DIAG_SIZE))
-    if board[col][line]['prongs']['S']:
-        WIN.blit(PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y + DIM_SQUARE - PRONG_LENGTH))
-    if board[col][line]['prongs']['SE']:
-        WIN.blit(PRONG_DIAG1, (x + DIM_SQUARE - PRONG_DIAG_SIZE, y + DIM_SQUARE - PRONG_DIAG_SIZE))
-    if board[col][line]['prongs']['E']:
-        WIN.blit(PRONG_HORIZ, (x + DIM_SQUARE - PRONG_LENGTH, y + DIM_SQUARE // 2 - PRONG_WIDTH // 2))
-    if board[col][line]['prongs']['NE']:
-        WIN.blit(PRONG_DIAG2, (x + DIM_SQUARE - PRONG_DIAG_SIZE, y))
+    sel_col = data['sel_pod'][0]
+    sel_line = data['sel_pod'][1]
+    mouse_col = data['mouse_square'][0]
+    mouse_line = data['mouse_square'][1]
+    sel_dir = selection()
+    selected = False
+    if sel_col == col and sel_line == line:
+        selected = True
+    for pdir in DIRECTIONS:
+        if board[col][line]['prongs'][pdir]:
+            if not selected:
+                if col == mouse_col and line == mouse_line:
+                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPOD_ALPHA)')
+                else:
+                    exec('WIN.blit(' + DIR_DATA[pdir] + ')')
+            else:
+                exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_SELECT_ALPHA)')
+        elif pdir == sel_dir:
+            if col == mouse_col and line == mouse_line:
+                exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPLACEMENT_ALPHA)')
     return
 
 
 def draw_pods():  # place pod images on board
-    i = 0
-    j = 0
+    sel_col = data['sel_pod'][0]
+    sel_line = data['sel_pod'][1]
+    mouse_col = data['mouse_square'][0]
+    mouse_line = data['mouse_square'][1]
     for col in board.keys():
         for line in board[col].keys():
             if board[col][line]:
@@ -167,17 +191,21 @@ def draw_pods():  # place pod images on board
                 x, y = pos_to_coords(col, line)
                 x += POD_OFFSET
                 y += POD_OFFSET
+                pod = None
                 if player == 'green':
-                    GREEN_PODS_LIST.append(pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90))
-                    WIN.blit(GREEN_PODS_LIST[i], (x, y))
-                    board[col][line]['img'] = GREEN_PODS_LIST[i]
-                    i += 1
-                    
+                    pod = GREEN_POD
                 elif player == 'red':
-                    RED_PODS_LIST.append(pygame.transform.rotate(pygame.transform.scale(RED_POD_IMAGE, (DIM_POD, DIM_POD)), 90))
-                    WIN.blit(RED_PODS_LIST[j], (x, y))
-                    board[col][line]['img'] = RED_PODS_LIST[j]
-                    j += 1
+                    pod = RED_POD
+                selected = False
+                if col == sel_col and line == sel_line:
+                    selected = True
+                if not selected:
+                    if col == mouse_col and line == mouse_line and selection() == 'pod':
+                        blit_alpha(WIN, pod, (x, y), POD_HOVER_ALPHA)
+                    else:
+                        WIN.blit(pod, (x, y))
+                else:
+                    blit_alpha(WIN, pod, (x, y), POD_SELECT_ALPHA)
 
 
 def draw_board():  # draw game board
@@ -195,14 +223,12 @@ def draw_board():  # draw game board
         hline = pygame.Rect(0, hliney, WIDTH, LWIDTH)
         pygame.draw.rect(WIN, BLACK, hline)
     draw_pods()
-    # draw_test()
-
     pygame.display.update()
 
 
 def selection():
-    x = data['mouse_coords'][0]
-    y = data['mouse_coords'][1]
+    x = int(data['mouse_coords'][0])
+    y = int(data['mouse_coords'][1])
     sel = 'none'
     col = data['mouse_square'][0]
     line = data['mouse_square'][1]
@@ -220,7 +246,6 @@ def selection():
             elif minisquare_x == 0 and minisquare_y == 1:
                 sel = 'W'
             elif minisquare_x == 1 and minisquare_y == 1:
-                data['sel_pod'] = [col, line]
                 sel = 'pod'
             elif minisquare_x == 2 and minisquare_y == 1:
                 sel = 'E'
@@ -232,70 +257,57 @@ def selection():
                 sel = 'SE'
     return sel
 
-def move_pod(dest_col, dest_line):
-    col = data['sel_pod'][0]
-    line = data['sel_pod'][1]
-    pod = board[col][line]
-    if(valid_move(data['sel_pod'][0],data['sel_pod'][1])):
-        board[dest_col][dest_line] = pod
-        data['sel_pod'][0] = dest_col
-        data['sel_pod'][1] = dest_line
-        del board[col][line]
+
+def deselect():
+    data['sel_pod'] = ['', '']
+
+
 def valid_move(last_col,last_line):
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
-    pod = board[last_col][last_line]
-    if board[last_col][last_line]['prongs']['N'] == True and square_line - pod_line == -1:
+    if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1:
         return 1
-    elif board[last_col][last_line]['prongs']['NW'] == True and (square_line - pod_line == -1 and pod_col - square_col == 1):
+    elif board[last_col][last_line]['prongs']['NW'] is True and (square_line - pod_line == -1 and pod_col - square_col == 1):
         return 1
-    elif board[last_col][last_line]['prongs']['W'] == True and pod_col - square_col == 1:
+    elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1:
         return 1
-    elif board[last_col][last_line]['prongs']['NE'] == True and (square_line - pod_line == -1 and pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['NE'] is True and (square_line - pod_line == -1 and pod_col - square_col == -1):
         return 1
-    elif board[last_col][last_line]['prongs']['E'] == True and (pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['E'] is True and (pod_col - square_col == -1):
         return 1
-    elif board[last_col][last_line]['prongs']['S'] == True and (square_line - pod_line == 1):
+    elif board[last_col][last_line]['prongs']['S'] is True and (square_line - pod_line == 1):
         return 1
-    elif board[last_col][last_line]['prongs']['SE'] == True and (square_line - pod_line == 1 and pod_col - square_col == -1):
+    elif board[last_col][last_line]['prongs']['SE'] is True and (square_line - pod_line == 1 and pod_col - square_col == -1):
         return 1
-    elif board[last_col][last_line]['prongs']['SW'] == True and (square_line - pod_line == 1 and pod_col - square_col == 1):
+    elif board[last_col][last_line]['prongs']['SW'] is True and (square_line - pod_line == 1 and pod_col - square_col == 1):
         return 1
     return 0
-    
-    
-       
-# functions to move pods; WIP
-def move_n(pod):
-    line = chr(ord(pod['pos'][1]) - 1)
-    pod['pos'][1] = chr(ord(pod['pos'][1]) - 1)
-    
 
-
-def move_nw(pod):
-    pod['pos'][1] = chr(ord(pod['pos'][1]) - 1)
-    pod['pos'][0] = chr(ord(pod['pos'][0]) - 1)
-    
-
-def move_w(pod):
-    pod['pos'][0] = chr(ord(pod['pos'][0]) - 1)
 
 
 def end_turn():
-    data['sel_pod'] = ['', '']
+    deselect()
     if data['turn'] == 'green':
         data['turn'] = 'red'
     elif data['turn'] == 'red':
         data['turn'] = 'green'
+    print("Turn ended")
 
 
-def over_pod():
-    mousex = data['mouse_coords'][0]
-    mousey = data['mouse_coords'][1]
-    col, line = coords_to_pos(mousex, mousey)
-    # if board[col][line] and
+def move_pod(dest_col, dest_line):
+    # TODO: fix bug: pieces can sometimes be moved excessive distances (eg. like horses in chess)
+    col = data['sel_pod'][0]
+    line = data['sel_pod'][1]
+    pod = board[col][line]
+    if valid_move(data['sel_pod'][0], data['sel_pod'][1]):
+        board[dest_col][dest_line] = copy.deepcopy(pod)
+        board[col][line] = {}
+        end_turn()
+    else:
+        deselect()
+
 
 
 # check for each player winning; WIP
@@ -303,6 +315,7 @@ def check_win_green():
     for pod in []:
         if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '2':
             pass
+
 
 
 def check_win_red():
@@ -313,44 +326,39 @@ def check_win_red():
 
 def main():
     init_board()
-    run = True
-    last_col = -1
-    last_line = -1
+    run = data['run']
+    last_col = ''
+    last_line = ''
     selected = 0
     while run:
         clock.tick(FPS)
+        data['mouse_coords'] = pygame.mouse.get_pos()
+        x = data['mouse_coords'][0]
+        y = data['mouse_coords'][1]
+        data['mouse_square'] = list(coords_to_pos(x, y))
+        col = data['mouse_square'][0]
+        line = data['mouse_square'][1]
+        sel = 'none'
+        if board[col][line]:  # TODO: fix bug where game crashes if mouse goes out of screen
+            sel = selection()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
-            data['mouse_coords'] = pygame.mouse.get_pos()
-            x = data['mouse_coords'][0]
-            y = data['mouse_coords'][1]
-            col = data['mouse_square'][0]
-            line = data['mouse_square'][1]
-            data['mouse_square'] = list(coords_to_pos(x, y))
-            sel = selection()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if sel not in ('none', 'pod'):
                     board[col][line]['prongs'][sel] = True
+                    end_turn()
                 elif sel == 'pod':
                     selected = 1
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
-                    x, y = pos_to_coords(col, line)
-                    board[col][line]['img'].set_alpha(100)
-                    #blit_alpha(WIN, board[col][line]['img'],(x,y), 100)
-                    pygame.display.update()
-                if (last_col != -1 and last_line != -1) and selected:
-                    if last_col != col or last_line != line:
-                        board[last_col][last_line]['img'].set_alpha(255)
-                        pygame.display.update()
-                        move_pod(col,line)
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
-                print(last_col,last_line)
-
-            #alpha_surface.fill((0,0,0,0))
+                if (last_col != '' and last_line != '') and selected:
+                    if last_col != col or last_line != line:
+                        move_pod(col, line)
+                print(last_col, last_line)
             pygame.display.update()
             if event.type == pygame.MOUSEBUTTONUP:
                 pass
