@@ -92,7 +92,6 @@ POD_HOVER_ALPHA = 192
 POD_SELECT_ALPHA = 128
 
 
-
 def init_board():
     data['turn'] = 'green'
     data['green_prongs'] = MAX_PRONGS
@@ -114,7 +113,7 @@ def init_board():
         board[col][line] = redpod
 
 
-def draw_text():# turn text
+def draw_text():  # turn text
     font = pygame.font.Font('freesansbold.ttf', 20)
     turn_text = font.render('Now playing: ', True, BLACK)
     green_text = font.render(data['turn'], True, LIGHT_GREEN)
@@ -123,10 +122,10 @@ def draw_text():# turn text
     green_rect = green_text.get_rect()
     orange_rect = orange_text.get_rect()
     WIN.blit(turn_text, (330, 20))
-    if(data['turn'] == 'green'):
-       WIN.blit(green_text, (460,20))
-    if(data['turn'] == 'red'):
-       WIN.blit(orange_text, (460,20))
+    if data['turn'] == 'green':
+        WIN.blit(green_text, (460, 20))
+    if data['turn'] == 'red':
+        WIN.blit(orange_text, (460, 20))
     
 
 def pos_to_coords(a, b):  # get position on board from pygame coordinates
@@ -141,32 +140,6 @@ def coords_to_pos(x, y):  # get pygame coordinates from position on board
     col = chr(ord('A') + x // (LWIDTH + DIM_SQUARE))
     line = str(1 + y // (LWIDTH + DIM_SQUARE))
     return col, line
-
-
-def pos_to_dir(col, line):  # get prong direction from square position and mouse position
-    coords = pos_to_coords(col, line)
-    pdir = ''
-    x = int(data['mouse_coords'][0])
-    y = int(data['mouse_coords'][1])
-    minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
-    minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
-    if minisquare_x == 0 and minisquare_y == 0:
-        pdir = 'NW'
-    elif minisquare_x == 1 and minisquare_y == 0:
-        pdir = 'N'
-    elif minisquare_x == 2 and minisquare_y == 0:
-        pdir = 'NE'
-    elif minisquare_x == 0 and minisquare_y == 1:
-        pdir = 'W'
-    elif minisquare_x == 2 and minisquare_y == 1:
-        pdir = 'E'
-    elif minisquare_x == 0 and minisquare_y == 2:
-        pdir = 'SW'
-    elif minisquare_x == 1 and minisquare_y == 2:
-        pdir = 'S'
-    elif minisquare_x == 2 and minisquare_y == 2:
-        pdir = 'SE'
-    return pdir
 
 
 def draw_prongs(col, line):  # place prong images on board
@@ -238,8 +211,8 @@ def draw_board():  # draw game board
     for hliney in range(0, HEIGHT + DIM_SQUARE + LWIDTH, + DIM_SQUARE + LWIDTH):
         hline = pygame.Rect(0, hliney, WIDTH, LWIDTH)
         pygame.draw.rect(WIN, BLACK, hline)
-    draw_text()
     draw_pods()
+    draw_text()
     pygame.display.update()
 
 
