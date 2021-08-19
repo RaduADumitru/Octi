@@ -92,6 +92,7 @@ POD_HOVER_ALPHA = 192
 POD_SELECT_ALPHA = 128
 
 
+
 def init_board():
     data['turn'] = 'green'
     data['green_prongs'] = MAX_PRONGS
@@ -112,6 +113,21 @@ def init_board():
         line = redpod['pos'][1]
         board[col][line] = redpod
 
+
+def draw_text():# turn text
+    font = pygame.font.Font('freesansbold.ttf', 20)
+    turn_text = font.render('Now playing: ', True, BLACK)
+    green_text = font.render(data['turn'], True, LIGHT_GREEN)
+    orange_text = font.render(data['turn'], True, ORANGE)
+    turn_rect = turn_text.get_rect()
+    green_rect = green_text.get_rect()
+    orange_rect = orange_text.get_rect()
+    WIN.blit(turn_text, (330, 20))
+    if(data['turn'] == 'green'):
+       WIN.blit(green_text, (460,20))
+    if(data['turn'] == 'red'):
+       WIN.blit(orange_text, (460,20))
+    
 
 def pos_to_coords(a, b):  # get position on board from pygame coordinates
     col = ord(a) - ord('A') + 1
@@ -222,6 +238,7 @@ def draw_board():  # draw game board
     for hliney in range(0, HEIGHT + DIM_SQUARE + LWIDTH, + DIM_SQUARE + LWIDTH):
         hline = pygame.Rect(0, hliney, WIDTH, LWIDTH)
         pygame.draw.rect(WIN, BLACK, hline)
+    draw_text()
     draw_pods()
     pygame.display.update()
 
@@ -233,7 +250,7 @@ def selection():
     col = data['mouse_square'][0]
     line = data['mouse_square'][1]
     if col in board and line in board[col]:
-        if board[col][line]:
+        if board[col][line] and board[col][line]['player'] == data['turn']:
             coords = pos_to_coords(col, line)
             minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
             minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
@@ -290,13 +307,13 @@ def valid_move():
 
 
 def end_turn():
-    deselect()
+    deselect()   
     if data['turn'] == 'green':
         data['turn'] = 'red'
     elif data['turn'] == 'red':
         data['turn'] = 'green'
     print("Turn ended")
-
+    
 
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
