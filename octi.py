@@ -2,6 +2,7 @@ import pygame
 import os
 import copy
 import math
+import time
 
 pygame.init()
 pod_template = {'player': '',
@@ -53,6 +54,8 @@ BEIGE = (245, 245, 220)
 BLACK = (0, 0, 0)
 ORANGE = (255, 165, 0)
 LIGHT_GREEN = (50, 205, 50)
+DARK_GREEN = (22, 101, 36)
+RED = (200, 66, 13)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 FPS = 60
@@ -84,6 +87,18 @@ PRONG_DIAG1 = pygame.transform.scale(PRONG_DIAG1_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 PRONG_DIAG2_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag2.png'))
 PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
 
+FONT = 'freesansbold.ttf'
+FONT_SIZE = 20
+# text
+font = pygame.font.Font(FONT, FONT_SIZE)
+turn_text = font.render('Now playing: ', True, BLACK)
+green_text = font.render('green', True, DARK_GREEN)
+orange_text = font.render('red', True, RED)
+
+# text position
+TURN_TEXT_POS = (330, 20)
+TURN_PLAYER_POS = (460, 20)
+
 # alpha values for transparency
 PRONG_HOVEROVERPOD_ALPHA = 192
 PRONG_HOVEROVERPLACEMENT_ALPHA = 64
@@ -92,7 +107,15 @@ POD_HOVER_ALPHA = 192
 POD_SELECT_ALPHA = 128
 
 
+def clear_board():
+    for col in board.keys():
+        for line in board[col].keys():
+            board[col][line] = {}
+
+
 def init_board():
+    clear_board()
+    deselect()
     data['turn'] = 'green'
     data['green_prongs'] = MAX_PRONGS
     data['red_prongs'] = MAX_PRONGS
@@ -114,18 +137,18 @@ def init_board():
 
 
 def draw_text():  # turn text
-    font = pygame.font.Font('freesansbold.ttf', 20)
-    turn_text = font.render('Now playing: ', True, BLACK)
-    green_text = font.render(data['turn'], True, LIGHT_GREEN)
-    orange_text = font.render(data['turn'], True, ORANGE)
-    turn_rect = turn_text.get_rect()
-    green_rect = green_text.get_rect()
-    orange_rect = orange_text.get_rect()
-    WIN.blit(turn_text, (330, 20))
+    # font = pygame.font.Font('freesansbold.ttf', 20)
+    # turn_text = font.render('Now playing: ', True, BLACK)
+    # green_text = font.render(data['turn'], True, LIGHT_GREEN)
+    # orange_text = font.render(data['turn'], True, ORANGE)
+    # turn_rect = turn_text.get_rect()
+    # green_rect = green_text.get_rect()
+    # orange_rect = orange_text.get_rect()
+    WIN.blit(turn_text, TURN_TEXT_POS)
     if data['turn'] == 'green':
-        WIN.blit(green_text, (460, 20))
+        WIN.blit(green_text, TURN_PLAYER_POS)
     if data['turn'] == 'red':
-        WIN.blit(orange_text, (460, 20))
+        WIN.blit(orange_text, TURN_PLAYER_POS)
     
 
 def pos_to_coords(a, b):  # get position on board from pygame coordinates
@@ -259,24 +282,41 @@ def valid_move():
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
-    if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
-        return 1
-    elif board[last_col][last_line]['prongs']['NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
-        return 1
-    elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1 and pod_line == square_line:
-        return 1
-    elif board[last_col][last_line]['prongs']['NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
-        return 1
-    elif board[last_col][last_line]['prongs']['E'] is True and pod_col - square_col == -1 and square_line == pod_line:
-        return 1
-    elif board[last_col][last_line]['prongs']['S'] is True and square_line - pod_line == 1 and pod_col == square_col:
-        return 1
-    elif board[last_col][last_line]['prongs']['SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
-        return 1
-    elif board[last_col][last_line]['prongs']['SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
-        return 1
+    if chr(square_col) in 'ABCDEF' and chr(square_line) in '1234567':
+        if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
+            return 1
+        elif board[last_col][last_line]['prongs']['NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
+            return 1
+        elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1 and pod_line == square_line:
+            return 1
+        elif board[last_col][last_line]['prongs']['NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
+            return 1
+        elif board[last_col][last_line]['prongs']['E'] is True and pod_col - square_col == -1 and square_line == pod_line:
+            return 1
+        elif board[last_col][last_line]['prongs']['S'] is True and square_line - pod_line == 1 and pod_col == square_col:
+            return 1
+        elif board[last_col][last_line]['prongs']['SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
+            return 1
+        elif board[last_col][last_line]['prongs']['SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
+            return 1
     return 0
 
+
+# check for each player winning; WIP
+def check_win():
+    for col in 'BCDE':
+        if board[col]['2']:
+            if board[col]['2']['player'] == 'green':
+                print('Green wins!')
+                # data['run'] = False
+                pygame.time.delay(3000)
+                main()
+        if board[col]['6']:
+            if board[col]['6']['player'] == 'red':
+                print('Red wins!')
+                # data['run'] = False
+                pygame.time.delay(3000)
+                main()
 
 
 def end_turn():
@@ -300,15 +340,6 @@ def move_pod(dest_col, dest_line):
         deselect()
 
 
-
-# check for each player winning; WIP
-def check_win_green():
-    for pod in []:
-        if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '2':
-            pass
-
-
-
 def check_win_red():
     for pod in []:
         if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '6':
@@ -317,29 +348,31 @@ def check_win_red():
 
 def main():
     init_board()
-    run = data['run']
     last_col = ''
     last_line = ''
     selected = 0
-    while run:
+    while data['run']:
         clock.tick(FPS)
-        data['mouse_coords'] = pygame.mouse.get_pos()
+        if bool(pygame.mouse.get_focused()):
+            data['mouse_coords'] = pygame.mouse.get_pos()
         x = data['mouse_coords'][0]
         y = data['mouse_coords'][1]
         data['mouse_square'] = list(coords_to_pos(x, y))
         col = data['mouse_square'][0]
         line = data['mouse_square'][1]
         sel = 'none'
-        if board[col][line]:  # TODO: fix bug where game crashes if mouse goes out of screen
-            sel = selection()
+        if col in 'ABCDEF' and line in '1234567':
+            if board[col][line]:
+                sel = selection()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                data['run'] = False
                 pygame.quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if sel not in ('none', 'pod'):
-                    board[col][line]['prongs'][sel] = True
-                    end_turn()
+                    if not board[col][line]['prongs'][sel]:
+                        board[col][line]['prongs'][sel] = True
+                        end_turn()
                 elif sel == 'pod':
                     selected = 1
                     data['sel_pod'] = [col, line]
@@ -354,6 +387,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 pass
         draw_board()
+        check_win()
 
 
 if __name__ == '__main__':
