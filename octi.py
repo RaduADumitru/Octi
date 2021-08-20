@@ -284,7 +284,8 @@ def valid_move():
     square_line = ord(data['mouse_square'][1])
     if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
         if not board[chr(square_col)][chr(square_line)]:
-            if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
+            if board[last_col][last_line]['prongs'][
+                'N'] is True and square_line - pod_line == -1 and pod_col == square_col:
                 return 1
             elif board[last_col][last_line]['prongs'][
                 'NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
@@ -342,7 +343,6 @@ def move_capture(pdir):
     board[pod_col][pod_line] = {}
 
 
-
 def valid_capture():
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
@@ -353,7 +353,8 @@ def valid_capture():
     if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
         if last_col in board.keys() and last_line in board[last_col].keys():
             if board[chr(square_col)][chr(square_line)]:
-                if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
+                if board[last_col][last_line]['prongs'][
+                    'N'] is True and square_line - pod_line == -1 and pod_col == square_col:
                     if chr(pod_line - 2) in board[chr(pod_col)].keys():
                         if not board[chr(pod_col)][chr(pod_line - 2)]:
                             return 'N'
@@ -395,45 +396,57 @@ def valid_capture():
     return 'none'
 
 
-# check for each player winning; WIP
-def check_win():
+def win_wait():
+    start_time = time.time()
+    seconds = 3
+    while True:
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                data['run'] = False
+                pygame.quit()
+        if elapsed_time > seconds:
+            break
+    main()
+
+
+def count_pods():
+    green = 0
+    red = 0
+    for col in board.keys():
+        for line in board[col].keys():
+            if board[col][line]:
+                player = board[col][line]['player']
+                if player == 'green':
+                    green += 1
+                elif player == 'red':
+                    red += 1
+    return green, red
+
+
+def check_win():  # check for each player winning
     for col in 'BCDE':
         if board[col]['2']:
-            if board[col]['2']['player'] == 'green':
+            if board[col]['2']['player'] == 'green':  # TODO: add victory text in middle of screen
                 print('Green wins!')
-                # data['run'] = False
-                start_time = time.time()
-                seconds = 3
-                while True:
-                    current_time = time.time()
-                    elapsed_time = current_time - start_time
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            data['run'] = False
-                            pygame.quit()
-                    if elapsed_time > seconds:
-                        break
-                main()
+                win_wait()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
                 print('Red wins!')
-                # data['run'] = False
-                start_time = time.time()
-                seconds = 3
-                while True:
-                    current_time = time.time()
-                    elapsed_time = current_time - start_time
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            data['run'] = False
-                            pygame.quit()
-                    if elapsed_time > seconds:
-                        break
-                main()
+                win_wait()
+    nr = count_pods()
+    if nr[0] == 0:
+        print('Red wins!')
+        win_wait()
+    if nr[1] == 0:
+        print('Green wins!')
+        win_wait()
 
 
 def end_turn():
     deselect()
+    data['capturing'] = False
     if data['turn'] == 'green':
         data['turn'] = 'red'
     elif data['turn'] == 'red':
@@ -447,8 +460,9 @@ def move_pod(dest_col, dest_line):
     pod = board[col][line]
     cap_dir = valid_capture()
     if cap_dir != 'none':
+        data['capturing'] = True
         move_capture(cap_dir)
-    elif valid_move(): #TODO: can't jump over own pieces
+    elif valid_move():  # TODO: can't jump over own pieces if selecting middle of captured piece
         board[dest_col][dest_line] = pod
         board[col][line] = {}
         end_turn()
