@@ -16,7 +16,6 @@ board = {'A': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'E': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'F': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}}}  # empty board
 
-
 MAX_PRONGS = 12  # number of prongs each player starts with
 data = {'green_prongs': MAX_PRONGS,
         'red_prongs': MAX_PRONGS,
@@ -24,7 +23,8 @@ data = {'green_prongs': MAX_PRONGS,
         'run': True,
         'sel_pod': ['', ''],
         'mouse_coords': [0, 0],
-        'mouse_square': ['A', '1']}
+        'mouse_square': ['A', '1'],
+        'capturing': False}
 
 DIR_DATA = {'N': 'PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y)',
             'NW': 'PRONG_DIAG1, (x, y)',
@@ -149,7 +149,7 @@ def draw_text():  # turn text
         WIN.blit(green_text, TURN_PLAYER_POS)
     if data['turn'] == 'red':
         WIN.blit(orange_text, TURN_PLAYER_POS)
-    
+
 
 def pos_to_coords(a, b):  # get position on board from pygame coordinates
     col = ord(a) - ord('A') + 1
@@ -282,24 +282,117 @@ def valid_move():
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(data['mouse_square'][0])
     square_line = ord(data['mouse_square'][1])
-    if chr(square_col) in 'ABCDEF' and chr(square_line) in '1234567':
-        if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
-            return 1
-        elif board[last_col][last_line]['prongs']['NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
-            return 1
-        elif board[last_col][last_line]['prongs']['W'] is True and pod_col - square_col == 1 and pod_line == square_line:
-            return 1
-        elif board[last_col][last_line]['prongs']['NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
-            return 1
-        elif board[last_col][last_line]['prongs']['E'] is True and pod_col - square_col == -1 and square_line == pod_line:
-            return 1
-        elif board[last_col][last_line]['prongs']['S'] is True and square_line - pod_line == 1 and pod_col == square_col:
-            return 1
-        elif board[last_col][last_line]['prongs']['SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
-            return 1
-        elif board[last_col][last_line]['prongs']['SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
-            return 1
+    if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
+        if not board[chr(square_col)][chr(square_line)]:
+            if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'W'] is True and pod_col - square_col == 1 and pod_line == square_line:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'E'] is True and pod_col - square_col == -1 and square_line == pod_line:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'S'] is True and square_line - pod_line == 1 and pod_col == square_col:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
+                return 1
+            elif board[last_col][last_line]['prongs'][
+                'SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
+                return 1
     return 0
+
+
+def capture(col, line):
+    if board[col][line]['player'] != data['turn']:
+        board[col][line] = {}
+
+
+def move_capture(pdir):
+    pod_col = data['sel_pod'][0]
+    pod_line = data['sel_pod'][1]
+    square_col = data['mouse_square'][0]
+    square_line = data['mouse_square'][1]
+    pod = board[pod_col][pod_line]
+    capture(square_col, square_line)
+    if pdir == 'N':
+        board[pod_col][chr(ord(pod_line) - 2)] = pod
+        board[pod_col][pod_line] = {}
+    elif pdir == 'NW':
+        board[chr(ord(pod_col) - 2)][chr(ord(pod_line) - 2)] = pod
+    elif pdir == 'W':
+        board[chr(ord(pod_col) - 2)][pod_line] = pod
+    elif pdir == 'SW':
+        board[chr(ord(pod_col) - 2)][chr(ord(pod_line) + 2)] = pod
+    elif pdir == 'S':
+        board[pod_col][chr(ord(pod_line) + 2)] = pod
+    elif pdir == 'SE':
+        board[chr(ord(pod_col) + 2)][chr(ord(pod_line) + 2)] = pod
+    elif pdir == 'E':
+        board[chr(ord(pod_col) + 2)][pod_line] = pod
+    elif pdir == 'NE':
+        board[chr(ord(pod_col) + 2)][chr(ord(pod_line) - 2)] = pod
+    board[pod_col][pod_line] = {}
+
+
+
+def valid_capture():
+    last_col = data['sel_pod'][0]
+    last_line = data['sel_pod'][1]
+    pod_col = ord(data['sel_pod'][0])
+    pod_line = ord(data['sel_pod'][1])
+    square_col = ord(data['mouse_square'][0])
+    square_line = ord(data['mouse_square'][1])
+    if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
+        if last_col in board.keys() and last_line in board[last_col].keys():
+            if board[chr(square_col)][chr(square_line)]:
+                if board[last_col][last_line]['prongs']['N'] is True and square_line - pod_line == -1 and pod_col == square_col:
+                    if chr(pod_line - 2) in board[chr(pod_col)].keys():
+                        if not board[chr(pod_col)][chr(pod_line - 2)]:
+                            return 'N'
+                elif board[last_col][last_line]['prongs'][
+                    'NW'] is True and square_line - pod_line == -1 and pod_col - square_col == 1:
+                    if chr(pod_col - 2) in board.keys() and chr(pod_line - 2) in board[chr(pod_col - 2)].keys():
+                        if not board[chr(pod_col - 2)][chr(pod_line - 2)]:
+                            return 'NW'
+                elif board[last_col][last_line]['prongs'][
+                    'W'] is True and pod_col - square_col == 1 and pod_line == square_line:
+                    if chr(pod_col - 2) in board.keys():
+                        if not board[chr(pod_col - 2)][chr(pod_line)]:
+                            return 'W'
+                elif board[last_col][last_line]['prongs'][
+                    'NE'] is True and square_line - pod_line == -1 and pod_col - square_col == -1:
+                    if chr(pod_col + 2) in board.keys() and chr(pod_line - 2) in board[chr(pod_col + 2)].keys():
+                        if not board[chr(pod_col + 2)][chr(pod_line - 2)]:
+                            return 'NE'
+                elif board[last_col][last_line]['prongs'][
+                    'E'] is True and pod_col - square_col == -1 and square_line == pod_line:
+                    if chr(pod_col + 2) in board.keys():
+                        if not board[chr(pod_col + 2)][chr(pod_line)]:
+                            return 'E'
+                elif board[last_col][last_line]['prongs'][
+                    'S'] is True and square_line - pod_line == 1 and pod_col == square_col:
+                    if chr(pod_line + 2) in board[chr(pod_col)].keys():
+                        if not board[chr(pod_col)][chr(pod_line + 2)]:
+                            return 'S'
+                elif board[last_col][last_line]['prongs'][
+                    'SE'] is True and square_line - pod_line == 1 and pod_col - square_col == -1:
+                    if chr(pod_col + 2) in board.keys() and chr(pod_line + 2) in board[chr(pod_col + 2)].keys():
+                        if not board[chr(pod_col + 2)][chr(pod_line + 2)]:
+                            return 'SE'
+                elif board[last_col][last_line]['prongs'][
+                    'SW'] is True and square_line - pod_line == 1 and pod_col - square_col == 1:
+                    if chr(pod_col - 2) in board.keys() and chr(pod_line + 2) in board[chr(pod_col - 2)].keys():
+                        if not board[chr(pod_col - 2)][chr(pod_line + 2)]:
+                            return 'SW'
+    return 'none'
 
 
 # check for each player winning; WIP
@@ -309,31 +402,54 @@ def check_win():
             if board[col]['2']['player'] == 'green':
                 print('Green wins!')
                 # data['run'] = False
-                pygame.time.delay(3000)
+                start_time = time.time()
+                seconds = 3
+                while True:
+                    current_time = time.time()
+                    elapsed_time = current_time - start_time
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            data['run'] = False
+                            pygame.quit()
+                    if elapsed_time > seconds:
+                        break
                 main()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
                 print('Red wins!')
                 # data['run'] = False
-                pygame.time.delay(3000)
+                start_time = time.time()
+                seconds = 3
+                while True:
+                    current_time = time.time()
+                    elapsed_time = current_time - start_time
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            data['run'] = False
+                            pygame.quit()
+                    if elapsed_time > seconds:
+                        break
                 main()
 
 
 def end_turn():
-    deselect()   
+    deselect()
     if data['turn'] == 'green':
         data['turn'] = 'red'
     elif data['turn'] == 'red':
         data['turn'] = 'green'
     print("Turn ended")
-    
+
 
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     pod = board[col][line]
-    if valid_move():
-        board[dest_col][dest_line] = copy.deepcopy(pod)
+    cap_dir = valid_capture()
+    if cap_dir != 'none':
+        move_capture(cap_dir)
+    elif valid_move(): #TODO: can't jump over own pieces
+        board[dest_col][dest_line] = pod
         board[col][line] = {}
         end_turn()
     else:
@@ -391,5 +507,4 @@ def main():
 
 
 if __name__ == '__main__':
-    while True:
-        main()
+    main()
