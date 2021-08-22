@@ -94,10 +94,17 @@ font = pygame.font.Font(FONT, FONT_SIZE)
 turn_text = font.render('Now playing: ', True, BLACK)
 green_text = font.render('green', True, DARK_GREEN)
 orange_text = font.render('red', True, RED)
+font2 = pygame.font.Font('freesansbold.ttf', 40)
+winner_text = font2.render('WINNER: ', True, BLACK)
+winner_green = font2.render('GREEN', True, DARK_GREEN)
+winner_red = font2.render('RED', True, RED)
 
 # text position
 TURN_TEXT_POS = (330, 20)
 TURN_PLAYER_POS = (460, 20)
+WINNER_TEXT_POS = (WIDTH//4, HEIGHT//2)
+WINNER_PLAYER_POS = (WIDTH // 4 + 200, HEIGHT//2)
+
 
 # alpha values for transparency
 PRONG_HOVEROVERPOD_ALPHA = 192
@@ -428,11 +435,17 @@ def count_pods():
 def check_win():  # check for each player winning
     for col in 'BCDE':
         if board[col]['2']:
-            if board[col]['2']['player'] == 'green':  # TODO: add victory text in middle of screen
+            if board[col]['2']['player'] == 'green':
+                WIN.blit(winner_text, WINNER_TEXT_POS)
+                WIN.blit(winner_green, WINNER_PLAYER_POS)
+                pygame.display.update()
                 print('Green wins!')
                 win_wait()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
+                WIN.blit(winner_text, WINNER_TEXT_POS)
+                WIN.blit(winner_red, WINNER_PLAYER_POS)
+                pygame.display.update()
                 print('Red wins!')
                 win_wait()
     nr = count_pods()
