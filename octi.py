@@ -89,22 +89,28 @@ PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 
 FONT = 'freesansbold.ttf'
 FONT_SIZE = 20
+FONT2_SIZE = 45
 # text
 font = pygame.font.Font(FONT, FONT_SIZE)
-turn_text = font.render('Now playing: ', True, BLACK)
+turn_text = font.render('Turn: ', True, BLACK)
 green_text = font.render('green', True, DARK_GREEN)
 orange_text = font.render('red', True, RED)
-font2 = pygame.font.Font('freesansbold.ttf', 40)
-winner_text = font2.render('WINNER: ', True, BLACK)
-winner_green = font2.render('GREEN', True, DARK_GREEN)
-winner_red = font2.render('RED', True, RED)
+font2 = pygame.font.Font(FONT, FONT2_SIZE)
+winner_text = font2.render('WINS!', True, BLACK)
+winner_green = font2.render('GREEN ', True, DARK_GREEN)
+winner_red = font2.render('RED ', True, RED)
 
 # text position
-TURN_TEXT_POS = (330, 20)
-TURN_PLAYER_POS = (460, 20)
-WINNER_TEXT_POS = (WIDTH//4, HEIGHT//2)
-WINNER_PLAYER_POS = (WIDTH // 4 + 200, HEIGHT//2)
-
+TURN_TEXT_POS = (2 * LWIDTH, 2 * LWIDTH)
+TURN_PLAYER_POS = (2 * LWIDTH + turn_text.get_width(), 2 * LWIDTH)
+WINNER_TEXT_RED_POS = (WIDTH // 2 - winner_text.get_width() // 2 + winner_red.get_width() // 2,
+                         HEIGHT // 2 - (winner_text.get_height() // 2))
+WINNER_PLAYER_RED_POS = (WIDTH // 2 - (winner_text.get_width() + winner_red.get_width()) // 2,
+                       HEIGHT // 2 - (winner_text.get_height() // 2))
+WINNER_TEXT_GREEN_POS = (WIDTH // 2 - winner_text.get_width() // 2 + winner_green.get_width() // 2,
+                         HEIGHT // 2 - (winner_text.get_height() // 2))
+WINNER_PLAYER_GREEN_POS = (WIDTH // 2 - (winner_text.get_width() + winner_green.get_width()) // 2,
+                       HEIGHT // 2 - (winner_text.get_height() // 2))
 
 # alpha values for transparency
 PRONG_HOVEROVERPOD_ALPHA = 192
@@ -123,6 +129,7 @@ def clear_board():
 def init_board():
     clear_board()
     deselect()
+    data['capturing'] = False
     data['turn'] = 'green'
     data['green_prongs'] = MAX_PRONGS
     data['red_prongs'] = MAX_PRONGS
@@ -350,13 +357,13 @@ def move_capture(pdir):
     board[pod_col][pod_line] = {}
 
 
-def valid_capture():
+def valid_capture(col, line):
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
-    square_col = ord(data['mouse_square'][0])
-    square_line = ord(data['mouse_square'][1])
+    square_col = ord(col)
+    square_line = ord(line)
     if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
         if last_col in board.keys() and last_line in board[last_col].keys():
             if board[chr(square_col)][chr(square_line)]:
@@ -436,15 +443,15 @@ def check_win():  # check for each player winning
     for col in 'BCDE':
         if board[col]['2']:
             if board[col]['2']['player'] == 'green':
-                WIN.blit(winner_text, WINNER_TEXT_POS)
-                WIN.blit(winner_green, WINNER_PLAYER_POS)
+                WIN.blit(winner_text, WINNER_TEXT_GREEN_POS)
+                WIN.blit(winner_green, WINNER_PLAYER_GREEN_POS)
                 pygame.display.update()
                 print('Green wins!')
                 win_wait()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
-                WIN.blit(winner_text, WINNER_TEXT_POS)
-                WIN.blit(winner_red, WINNER_PLAYER_POS)
+                WIN.blit(winner_text, WINNER_TEXT_RED_POS)
+                WIN.blit(winner_red, WINNER_PLAYER_RED_POS)
                 pygame.display.update()
                 print('Red wins!')
                 win_wait()
@@ -467,11 +474,28 @@ def end_turn():
     print("Turn ended")
 
 
+def can_capture():
+    col = data['sel_pod'][0]
+    line = data['sel_pod'][1]
+    can = False
+    positions = {'N': (col, chr(ord(line) - 2)),
+                 'NW': (chr(ord(col) - 2), chr(ord(line) - 2)),
+                 'W': (chr(ord(col) - 2), line),
+                 'SW': (chr(ord(col) - 2), chr(ord(line) + 2)),
+                 'S': (col, chr(ord(line) + 2)),
+                 'SE': (chr(ord(col) + 2), chr(ord(line) + 2)),
+                 'E': (chr(ord(col) + 2), line),
+                 'NE': (chr(ord(col) + 2), chr(ord(line) - 2))}
+    for cap_dir in positions.keys():
+        if valid_capture(positions[cap_dir][0], positions[cap_dir][1]):
+            can = True
+    return can
+
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     pod = board[col][line]
-    cap_dir = valid_capture()
+    cap_dir = valid_capture(data['mouse_square'][0], data['mouse_square'][1])
     if cap_dir != 'none':
         data['capturing'] = True
         move_capture(cap_dir)
@@ -493,7 +517,7 @@ def main():
     init_board()
     last_col = ''
     last_line = ''
-    selected = 0
+    selected = False
     while data['run']:
         clock.tick(FPS)
         if bool(pygame.mouse.get_focused()):
@@ -504,7 +528,7 @@ def main():
         col = data['mouse_square'][0]
         line = data['mouse_square'][1]
         sel = 'none'
-        if col in 'ABCDEF' and line in '1234567':
+        if col in board.keys() and line in board[col].keys():
             if board[col][line]:
                 sel = selection()
         for event in pygame.event.get():
@@ -517,7 +541,7 @@ def main():
                         board[col][line]['prongs'][sel] = True
                         end_turn()
                 elif sel == 'pod':
-                    selected = 1
+                    selected = True
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
                 last_col = data['sel_pod'][0]
@@ -525,10 +549,9 @@ def main():
                 if (last_col != '' and last_line != '') and selected:
                     if last_col != col or last_line != line:
                         move_pod(col, line)
-                print(last_col, last_line)
-            pygame.display.update()
-            if event.type == pygame.MOUSEBUTTONUP:
-                pass
+        # if data['capturing']: #TODO: not working
+        #     if not can_capture():
+        #         end_turn()
         draw_board()
         check_win()
 
