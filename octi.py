@@ -338,21 +338,37 @@ def move_capture(pdir):
     pod = board[pod_col][pod_line]
     capture(square_col, square_line)
     if pdir == 'N':
+        data['sel_pod'][0] = pod_col
+        data['sel_pod'][1] = chr(ord(pod_line) - 2)
         board[pod_col][chr(ord(pod_line) - 2)] = pod
         board[pod_col][pod_line] = {}
     elif pdir == 'NW':
+        data['sel_pod'][0] = chr(ord(pod_col) - 2)
+        data['sel_pod'][1] = chr(ord(pod_line) - 2)
         board[chr(ord(pod_col) - 2)][chr(ord(pod_line) - 2)] = pod
     elif pdir == 'W':
+        data['sel_pod'][0] = chr(ord(pod_col) - 2)
+        data['sel_pod'][1] = pod_line
         board[chr(ord(pod_col) - 2)][pod_line] = pod
     elif pdir == 'SW':
+        data['sel_pod'][0] = chr(ord(pod_col) - 2)
+        data['sel_pod'][1] = chr(ord(pod_line) + 2)
         board[chr(ord(pod_col) - 2)][chr(ord(pod_line) + 2)] = pod
     elif pdir == 'S':
+        data['sel_pod'][0] = pod_col
+        data['sel_pod'][1] = chr(ord(pod_line) + 2)
         board[pod_col][chr(ord(pod_line) + 2)] = pod
     elif pdir == 'SE':
+        data['sel_pod'][0] = chr(ord(pod_col) - 2)
+        data['sel_pod'][1] = chr(ord(pod_line) - 2)
         board[chr(ord(pod_col) + 2)][chr(ord(pod_line) + 2)] = pod
     elif pdir == 'E':
+        data['sel_pod'][0] = chr(ord(pod_col) + 2)
+        data['sel_pod'][1] = pod_line
         board[chr(ord(pod_col) + 2)][pod_line] = pod
     elif pdir == 'NE':
+        data['sel_pod'][0] = chr(ord(pod_col) + 2)
+        data['sel_pod'][1] = chr(ord(pod_line) - 2)
         board[chr(ord(pod_col) + 2)][chr(ord(pod_line) - 2)] = pod
     board[pod_col][pod_line] = {}
 
@@ -364,6 +380,7 @@ def valid_capture(col, line):
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(col)
     square_line = ord(line)
+    print(board[last_col][last_line])
     if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
         if last_col in board.keys() and last_line in board[last_col].keys():
             if board[chr(square_col)][chr(square_line)]:
@@ -549,9 +566,9 @@ def main():
                 if (last_col != '' and last_line != '') and selected:
                     if last_col != col or last_line != line:
                         move_pod(col, line)
-        # if data['capturing']: #TODO: not working
-        #     if not can_capture():
-        #         end_turn()
+        if data['capturing']: #TODO: not working
+             if not can_capture():
+                 end_turn()
         draw_board()
         check_win()
 
