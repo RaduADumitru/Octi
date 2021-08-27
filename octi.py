@@ -192,7 +192,7 @@ def draw_prongs(col, line):  # place prong images on board
     for pdir in DIRECTIONS:
         if board[col][line]['prongs'][pdir]:
             if not selected:
-                if col == mouse_col and line == mouse_line:
+                if col == mouse_col and line == mouse_line and sel_dir == 'pod':
                     exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPOD_ALPHA)')
                 else:
                     exec('WIN.blit(' + DIR_DATA[pdir] + ')')
@@ -200,7 +200,8 @@ def draw_prongs(col, line):  # place prong images on board
                 exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_SELECT_ALPHA)')
         elif pdir == sel_dir:
             if col == mouse_col and line == mouse_line:
-                exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPLACEMENT_ALPHA)')
+                if not data['capturing']:
+                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPLACEMENT_ALPHA)')
     return
 
 
@@ -380,7 +381,6 @@ def valid_capture(col, line):
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(col)
     square_line = ord(line)
-    print(board[last_col][last_line])
     if chr(square_col) in board.keys() and chr(square_line) in board[chr(square_col)].keys():
         if last_col in board.keys() and last_line in board[last_col].keys():
             if board[chr(square_col)][chr(square_line)]:
@@ -463,21 +463,23 @@ def check_win():  # check for each player winning
                 WIN.blit(winner_text, WINNER_TEXT_GREEN_POS)
                 WIN.blit(winner_green, WINNER_PLAYER_GREEN_POS)
                 pygame.display.update()
-                print('Green wins!')
                 win_wait()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
                 WIN.blit(winner_text, WINNER_TEXT_RED_POS)
                 WIN.blit(winner_red, WINNER_PLAYER_RED_POS)
                 pygame.display.update()
-                print('Red wins!')
                 win_wait()
     nr = count_pods()
     if nr[0] == 0:
-        print('Red wins!')
+        WIN.blit(winner_text, WINNER_TEXT_RED_POS)
+        WIN.blit(winner_red, WINNER_PLAYER_RED_POS)
+        pygame.display.update()
         win_wait()
     if nr[1] == 0:
-        print('Green wins!')
+        WIN.blit(winner_text, WINNER_TEXT_GREEN_POS)
+        WIN.blit(winner_green, WINNER_PLAYER_GREEN_POS)
+        pygame.display.update()
         win_wait()
 
 
@@ -492,6 +494,8 @@ def end_turn():
 
 
 def can_capture():
+    if data['sel_pod'] == ['', '']:
+        return False
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     can = False
@@ -507,6 +511,7 @@ def can_capture():
         if valid_capture(positions[cap_dir][0], positions[cap_dir][1]):
             can = True
     return can
+
 
 def move_pod(dest_col, dest_line):
     col = data['sel_pod'][0]
@@ -554,10 +559,10 @@ def main():
                 pygame.quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if sel not in ('none', 'pod'):
-                    if not board[col][line]['prongs'][sel]:
+                    if not data['capturing'] and not board[col][line]['prongs'][sel]:
                         board[col][line]['prongs'][sel] = True
                         end_turn()
-                elif sel == 'pod':
+                elif sel == 'pod' and not data['capturing']:
                     selected = True
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
