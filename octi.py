@@ -360,8 +360,8 @@ def move_capture(pdir):
         data['sel_pod'][1] = chr(ord(pod_line) + 2)
         board[pod_col][chr(ord(pod_line) + 2)] = pod
     elif pdir == 'SE':
-        data['sel_pod'][0] = chr(ord(pod_col) - 2)
-        data['sel_pod'][1] = chr(ord(pod_line) - 2)
+        data['sel_pod'][0] = chr(ord(pod_col) + 2)
+        data['sel_pod'][1] = chr(ord(pod_line) + 2)
         board[chr(ord(pod_col) + 2)][chr(ord(pod_line) + 2)] = pod
     elif pdir == 'E':
         data['sel_pod'][0] = chr(ord(pod_col) + 2)
@@ -521,9 +521,10 @@ def move_pod(dest_col, dest_line):
     if cap_dir != 'none':
         data['capturing'] = True
         move_capture(cap_dir)
-    elif valid_move():  # TODO: can't jump over own pieces if selecting middle of captured piece
-        board[dest_col][dest_line] = pod
-        board[col][line] = {}
+    elif valid_move():
+        if not data['capturing']: # TODO: can't jump over own pieces if selecting middle of captured piece
+            board[dest_col][dest_line] = pod
+            board[col][line] = {}
         end_turn()
     else:
         deselect()
@@ -571,10 +572,11 @@ def main():
                 if (last_col != '' and last_line != '') and selected:
                     if last_col != col or last_line != line:
                         move_pod(col, line)
-        if data['capturing']: #TODO: not working
-             if not can_capture():
-                 end_turn()
+            if data['capturing']:  # TODO: not working
+                 if not can_capture():
+                     end_turn()
         draw_board()
+        print(data['capturing'])
         check_win()
 
 
