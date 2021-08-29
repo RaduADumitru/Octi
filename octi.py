@@ -63,16 +63,6 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Octi")
 
 
-def blit_alpha(target, source, location, opacity):
-    x = location[0]
-    y = location[1]
-    temp = pygame.Surface((source.get_width(), source.get_height())).convert()
-    temp.blit(target, (-x, -y))
-    temp.blit(source, (0, 0))
-    temp.set_alpha(opacity)
-    target.blit(temp, location)
-
-
 # load images
 GREEN_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'green_pod.png'))
 GREEN_POD = pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90)
@@ -90,27 +80,59 @@ PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_
 FONT = 'freesansbold.ttf'
 FONT_SIZE = 20
 FONT2_SIZE = 45
+OUTLINE_OFFSET = 2
 # text
 font = pygame.font.Font(FONT, FONT_SIZE)
 turn_text = font.render('Turn: ', True, BLACK)
 green_text = font.render('green', True, DARK_GREEN)
 orange_text = font.render('red', True, RED)
 font2 = pygame.font.Font(FONT, FONT2_SIZE)
-winner_text = font2.render('WINS!', True, BLACK)
-winner_green = font2.render('GREEN ', True, DARK_GREEN)
-winner_red = font2.render('RED ', True, RED)
+WINNER_GREEN = font2.render('GREEN WINS!', True, DARK_GREEN)
+WINNER_GREEN_OUTLINE = font2.render('GREEN WINS!', True, BLACK)
+WINNER_RED = font2.render('RED WINS!', True, RED)
+WINNER_RED_OUTLINE = font2.render('RED WINS!', True, BLACK)
+
+
+def draw_win_text(text):
+    def draw1(x1, y1, drawn_text, window):
+        textbox = drawn_text.get_rect()
+        textbox.center = (x1, y1)
+        window.blit(drawn_text, textbox)
+
+    x = WIDTH // 2
+    y = HEIGHT // 2
+
+    # TEXT OUTLINE
+    outline_text = WINNER_RED_OUTLINE
+    if text == WINNER_GREEN:
+        outline_text = WINNER_GREEN_OUTLINE
+    # top left
+    draw1(x - OUTLINE_OFFSET, y - OUTLINE_OFFSET, outline_text, WIN)
+    # top right
+    draw1(x + OUTLINE_OFFSET, y - OUTLINE_OFFSET, outline_text, WIN)
+    # btm left
+    draw1(x - OUTLINE_OFFSET, y + OUTLINE_OFFSET, outline_text, WIN)
+    # btm right
+    draw1(x + OUTLINE_OFFSET, y + OUTLINE_OFFSET, outline_text, WIN)
+
+    # TEXT FILL
+
+    draw1(x, y, text, WIN)
+
+
+def blit_alpha(target, source, location, opacity):
+    x = location[0]
+    y = location[1]
+    temp = pygame.Surface((source.get_width(), source.get_height())).convert()
+    temp.blit(target, (-x, -y))
+    temp.blit(source, (0, 0))
+    temp.set_alpha(opacity)
+    target.blit(temp, location)
+
 
 # text position
 TURN_TEXT_POS = (2 * LWIDTH, 2 * LWIDTH)
 TURN_PLAYER_POS = (2 * LWIDTH + turn_text.get_width(), 2 * LWIDTH)
-WINNER_TEXT_RED_POS = (WIDTH // 2 - winner_text.get_width() // 2 + winner_red.get_width() // 2,
-                       HEIGHT // 2 - (winner_text.get_height() // 2))
-WINNER_PLAYER_RED_POS = (WIDTH // 2 - (winner_text.get_width() + winner_red.get_width()) // 2,
-                         HEIGHT // 2 - (winner_text.get_height() // 2))
-WINNER_TEXT_GREEN_POS = (WIDTH // 2 - winner_text.get_width() // 2 + winner_green.get_width() // 2,
-                         HEIGHT // 2 - (winner_text.get_height() // 2))
-WINNER_PLAYER_GREEN_POS = (WIDTH // 2 - (winner_text.get_width() + winner_green.get_width()) // 2,
-                           HEIGHT // 2 - (winner_text.get_height() // 2))
 
 # alpha values for transparency
 PRONG_HOVEROVERPOD_ALPHA = 192
@@ -151,13 +173,6 @@ def init_board():
 
 
 def draw_text():  # turn text
-    # font = pygame.font.Font('freesansbold.ttf', 20)
-    # turn_text = font.render('Now playing: ', True, BLACK)
-    # green_text = font.render(data['turn'], True, LIGHT_GREEN)
-    # orange_text = font.render(data['turn'], True, ORANGE)
-    # turn_rect = turn_text.get_rect()
-    # green_rect = green_text.get_rect()
-    # orange_rect = orange_text.get_rect()
     WIN.blit(turn_text, TURN_TEXT_POS)
     if data['turn'] == 'green':
         WIN.blit(green_text, TURN_PLAYER_POS)
@@ -460,25 +475,21 @@ def check_win():  # check for each player winning
     for col in 'BCDE':
         if board[col]['2']:
             if board[col]['2']['player'] == 'green':
-                WIN.blit(winner_text, WINNER_TEXT_GREEN_POS)
-                WIN.blit(winner_green, WINNER_PLAYER_GREEN_POS)
+                draw_win_text(WINNER_GREEN)
                 pygame.display.update()
                 win_wait()
         if board[col]['6']:
             if board[col]['6']['player'] == 'red':
-                WIN.blit(winner_text, WINNER_TEXT_RED_POS)
-                WIN.blit(winner_red, WINNER_PLAYER_RED_POS)
+                draw_win_text(WINNER_RED)
                 pygame.display.update()
                 win_wait()
     nr = count_pods()
     if nr[0] == 0:
-        WIN.blit(winner_text, WINNER_TEXT_RED_POS)
-        WIN.blit(winner_red, WINNER_PLAYER_RED_POS)
+        draw_win_text(WINNER_RED)
         pygame.display.update()
         win_wait()
     if nr[1] == 0:
-        WIN.blit(winner_text, WINNER_TEXT_GREEN_POS)
-        WIN.blit(winner_green, WINNER_PLAYER_GREEN_POS)
+        draw_win_text(WINNER_GREEN)
         pygame.display.update()
         win_wait()
 
@@ -510,8 +521,6 @@ def can_capture():
     for cap_dir in positions.keys():
         if valid_capture(positions[cap_dir][0], positions[cap_dir][1]) != 'none':
             can = True
-            print(positions[cap_dir][0], positions[cap_dir][1])
-    print(can)
     return can
 
 
@@ -574,9 +583,9 @@ def main():
                 if (last_col != '' and last_line != '') and selected:
                     if last_col != col or last_line != line:
                         move_pod(col, line)
-            if data['capturing']:
-                if not can_capture():
-                    end_turn()
+        if data['capturing']:
+            if not can_capture():
+                end_turn()
         draw_board()
         check_win()
 
