@@ -499,17 +499,19 @@ def can_capture():
     col = data['sel_pod'][0]
     line = data['sel_pod'][1]
     can = False
-    positions = {'N': (col, chr(ord(line) - 2)),
-                 'NW': (chr(ord(col) - 2), chr(ord(line) - 2)),
-                 'W': (chr(ord(col) - 2), line),
-                 'SW': (chr(ord(col) - 2), chr(ord(line) + 2)),
-                 'S': (col, chr(ord(line) + 2)),
-                 'SE': (chr(ord(col) + 2), chr(ord(line) + 2)),
-                 'E': (chr(ord(col) + 2), line),
-                 'NE': (chr(ord(col) + 2), chr(ord(line) - 2))}
+    positions = {'N': (col, chr(ord(line) - 1)),
+                 'NW': (chr(ord(col) - 1), chr(ord(line) - 1)),
+                 'W': (chr(ord(col) - 1), line),
+                 'SW': (chr(ord(col) - 1), chr(ord(line) + 1)),
+                 'S': (col, chr(ord(line) + 1)),
+                 'SE': (chr(ord(col) + 1), chr(ord(line) + 1)),
+                 'E': (chr(ord(col) + 1), line),
+                 'NE': (chr(ord(col) + 1), chr(ord(line) - 1))}
     for cap_dir in positions.keys():
-        if valid_capture(positions[cap_dir][0], positions[cap_dir][1]):
+        if valid_capture(positions[cap_dir][0], positions[cap_dir][1]) != 'none':
             can = True
+            print(positions[cap_dir][0], positions[cap_dir][1])
+    print(can)
     return can
 
 
@@ -572,11 +574,10 @@ def main():
                 if (last_col != '' and last_line != '') and selected:
                     if last_col != col or last_line != line:
                         move_pod(col, line)
-            if data['capturing']:  # TODO: not working
-                 if not can_capture():
-                     end_turn()
+            if data['capturing']:
+                if not can_capture():
+                    end_turn()
         draw_board()
-        print(data['capturing'])
         check_win()
 
 
