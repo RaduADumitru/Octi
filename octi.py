@@ -1,5 +1,6 @@
 import pygame
 import os
+import sys
 import copy
 import math
 import time
@@ -62,17 +63,27 @@ pygame.display.set_caption("Octi")
 
 
 # load images
-GREEN_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'green_pod.png'))
+def resource_path(relative_path):
+    """ Get the absolute path to the resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+GREEN_POD_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'green_pod.png')))
 GREEN_POD = pygame.transform.rotate(pygame.transform.scale(GREEN_POD_IMAGE, (DIM_POD, DIM_POD)), 90)
-RED_POD_IMAGE = pygame.image.load(os.path.join('Assets', 'red_pod.png'))
+RED_POD_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'red_pod.png')))
 RED_POD = pygame.transform.rotate(pygame.transform.scale(RED_POD_IMAGE, (DIM_POD, DIM_POD)), -90)
-PRONG_HORIZ_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_horiz.png'))
+PRONG_HORIZ_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'prong_horiz.png')))
 PRONG_HORIZ = pygame.transform.scale(PRONG_HORIZ_IMAGE, (PRONG_LENGTH, PRONG_WIDTH))
-PRONG_VERT_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_vert.png'))
+PRONG_VERT_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'prong_vert.png')))
 PRONG_VERT = pygame.transform.scale(PRONG_VERT_IMAGE, (PRONG_WIDTH, PRONG_LENGTH))
-PRONG_DIAG1_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag1.png'))
+PRONG_DIAG1_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'prong_diag1.png')))
 PRONG_DIAG1 = pygame.transform.scale(PRONG_DIAG1_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
-PRONG_DIAG2_IMAGE = pygame.image.load(os.path.join('Assets', 'prong_diag2.png'))
+PRONG_DIAG2_IMAGE = pygame.image.load(resource_path(os.path.join('Assets', 'prong_diag2.png')))
 PRONG_DIAG2 = pygame.transform.scale(PRONG_DIAG2_IMAGE, (PRONG_DIAG_SIZE, PRONG_DIAG_SIZE))
 
 FONT = 'freesansbold.ttf'
@@ -465,6 +476,7 @@ def win_wait():  # wait for short period after win
             if event.type == pygame.QUIT:
                 data['run'] = False
                 pygame.quit()
+                sys.exit()
         if elapsed_time > seconds:
             break
     main()
@@ -575,6 +587,7 @@ def main():
             if event.type == pygame.QUIT:
                 data['run'] = False
                 pygame.quit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if sel not in ('none', 'pod'):
                     if not data['capturing'] and not board[col][line]['prongs'][sel]:
