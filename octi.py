@@ -16,14 +16,11 @@ board = {'A': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'E': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'F': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}}}  # empty board
 
-MAX_PRONGS = 12  # number of prongs each player starts with
-data = {'green_prongs': MAX_PRONGS,
-        'red_prongs': MAX_PRONGS,
-        'turn': 'green',
+data = {'turn': 'green',
         'run': True,
         'sel_pod': ['', ''],
         'mouse_coords': [0, 0],
-        'mouse_square': ['A', '1'],
+        'mouse_square': ['', ''],
         'capturing': False}
 
 DIR_DATA = {'N': 'PRONG_VERT, (x + DIM_SQUARE // 2 - PRONG_WIDTH // 2, y)',
@@ -154,8 +151,6 @@ def init_board():
     deselect()
     data['capturing'] = False
     data['turn'] = 'green'
-    data['green_prongs'] = MAX_PRONGS
-    data['red_prongs'] = MAX_PRONGS
     # place pods in starting positions
     for i in range(4):
         greenpod = copy.deepcopy(pod_template)
@@ -167,7 +162,7 @@ def init_board():
         board[chr(ord('A') + i + 1)]['2'] = redpod
 
 
-def draw_text():  # turn text
+def draw_turn_text():  # turn text
     WIN.blit(turn_text, TURN_TEXT_POS)
     if data['turn'] == 'green':
         WIN.blit(green_text, TURN_PLAYER_POS)
@@ -280,7 +275,7 @@ def draw_board():  # draw game board
         hline = pygame.Rect(0, hliney, WIDTH, LWIDTH)
         pygame.draw.rect(WIN, BLACK, hline)
     draw_pods()
-    draw_text()
+    draw_turn_text()
     pygame.display.update()
 
 
@@ -293,6 +288,7 @@ def selection():  # return portion of square where mouse is located
     if col in board and line in board[col]:
         if board[col][line] and board[col][line]['player'] == data['turn']:
             coords = pos_to_coords(col, line)
+            # square split into 9 equal smaller squares, each corresponding to a direction / center
             minisquare_x = math.floor((x - coords[0]) // (DIM_SQUARE // 3))
             minisquare_y = math.floor((y - coords[1]) // (DIM_SQUARE // 3))
             if minisquare_x == 0 and minisquare_y == 0:
@@ -404,7 +400,7 @@ def move_capture(pdir):  # move piece in a given direction when capturing
     board[pod_col][pod_line] = {}
 
 
-def valid_capture(col, line):  # check if selected piece can make a capture on given position
+def valid_capture(col, line):  # check in which direction selected piece can capture on given square, if any
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
     if last_col not in 'ABCDEF' or last_line not in '1234567' or last_col == '' or last_line == '':
@@ -518,7 +514,6 @@ def end_turn():
         data['turn'] = 'red'
     elif data['turn'] == 'red':
         data['turn'] = 'green'
-    print("Turn ended")
 
 
 def can_capture():  # check if selected piece can make any more captures; if not, turn will end
@@ -558,12 +553,6 @@ def move_pod(dest_col, dest_line):
         deselect()
 
 
-def check_win_red():
-    for pod in []:
-        if (ord('B') <= ord(pod['pos'][0]) <= ord('E')) and pod['pos'][1] == '6':
-            pass
-
-
 def main():
     init_board()
     last_col = ''
@@ -571,7 +560,7 @@ def main():
     selected = False
     while data['run']:
         clock.tick(FPS)
-        if bool(pygame.mouse.get_focused()):
+        if bool(pygame.mouse.get_focused()):  # if mouse on screen, get coordinates
             data['mouse_coords'] = list(pygame.mouse.get_pos())
         x = data['mouse_coords'][0]
         y = data['mouse_coords'][1]
@@ -595,7 +584,6 @@ def main():
                 elif sel == 'pod' and not data['capturing'] and valid_capture(col, line) == 'none':
                     selected = True
                     data['sel_pod'] = [col, line]
-                    print(f'Pod {col}{line} selected')
                 last_col = data['sel_pod'][0]
                 last_line = data['sel_pod'][1]
                 if (last_col != '' and last_line != '') and selected:
