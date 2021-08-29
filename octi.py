@@ -7,8 +7,8 @@ import time
 pygame.init()
 pod_template = {'player': '',
                 'prongs': {'NW': False, 'N': False, 'NE': False, 'E': False,
-                           'SE': False, 'S': False, 'SW': False, 'W': False},
-                'pos': ['', '']}  # empty pod
+                           'SE': False, 'S': False, 'SW': False, 'W': False}
+                }  # empty pod
 board = {'A': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'B': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
          'C': {'1': {}, '2': {}, '3': {}, '4': {}, '5': {}, '6': {}, '7': {}},
@@ -45,6 +45,7 @@ COLUMNS = 6
 LINES = 7
 # width and height of board
 WIDTH, HEIGHT = (COLUMNS + 1) * LWIDTH + COLUMNS * DIM_SQUARE, (LINES + 1) * LWIDTH + LINES * DIM_SQUARE
+# prong image dimensions
 PRONG_DIAG_SIZE = 30
 PRONG_LENGTH = 30
 PRONG_WIDTH = 10
@@ -93,7 +94,7 @@ WINNER_RED = font2.render('RED WINS!', True, RED)
 WINNER_RED_OUTLINE = font2.render('RED WINS!', True, BLACK)
 
 
-def draw_win_text(text):
+def draw_win_text(text): # draw outlined text upon win
     def draw1(x1, y1, drawn_text, window):
         textbox = drawn_text.get_rect()
         textbox.center = (x1, y1)
@@ -120,7 +121,7 @@ def draw_win_text(text):
     draw1(x, y, text, WIN)
 
 
-def blit_alpha(target, source, location, opacity):
+def blit_alpha(target, source, location, opacity):  # draw transparent images
     x = location[0]
     y = location[1]
     temp = pygame.Surface((source.get_width(), source.get_height())).convert()
@@ -142,7 +143,7 @@ POD_HOVER_ALPHA = 192
 POD_SELECT_ALPHA = 128
 
 
-def clear_board():
+def clear_board():  # reset board when starting new game
     for col in board.keys():
         for line in board[col].keys():
             board[col][line] = {}
@@ -159,17 +160,11 @@ def init_board():
     for i in range(4):
         greenpod = copy.deepcopy(pod_template)
         greenpod['player'] = 'green'
-        greenpod['pos'] = [chr(ord('A') + i + 1), '6']
-        col = greenpod['pos'][0]
-        line = greenpod['pos'][1]
-        board[col][line] = greenpod
+        board[chr(ord('A') + i + 1)]['6'] = greenpod
     for i in range(4):
         redpod = copy.deepcopy(pod_template)
         redpod['player'] = 'red'
-        redpod['pos'] = [chr(ord('A') + i + 1), '2']
-        col = redpod['pos'][0]
-        line = redpod['pos'][1]
-        board[col][line] = redpod
+        board[chr(ord('A') + i + 1)]['2'] = redpod
 
 
 def draw_text():  # turn text
@@ -269,7 +264,7 @@ def draw_board():  # draw game board
     pygame.display.update()
 
 
-def selection():
+def selection():  # return portion of square where mouse is located
     x = int(data['mouse_coords'][0])
     y = int(data['mouse_coords'][1])
     sel = 'none'
@@ -305,7 +300,7 @@ def deselect():
     data['sel_pod'] = ['', '']
 
 
-def valid_move():
+def valid_move():  # check if selected piece can move on mouse position
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
     pod_col = ord(data['sel_pod'][0])
@@ -346,7 +341,7 @@ def capture(col, line):
         board[col][line] = {}
 
 
-def move_capture(pdir):
+def move_capture(pdir):  # move piece in a given direction when capturing
     pod_col = data['sel_pod'][0]
     pod_line = data['sel_pod'][1]
     square_col = data['mouse_square'][0]
@@ -389,7 +384,7 @@ def move_capture(pdir):
     board[pod_col][pod_line] = {}
 
 
-def valid_capture(col, line):
+def valid_capture(col, line):  # check if selected piece can make a capture on given position
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
     pod_col = ord(data['sel_pod'][0])
@@ -442,7 +437,7 @@ def valid_capture(col, line):
     return 'none'
 
 
-def win_wait():
+def win_wait():  # wait for short period after win
     start_time = time.time()
     seconds = 3
     while True:
@@ -457,7 +452,7 @@ def win_wait():
     main()
 
 
-def count_pods():
+def count_pods():  # count pods on board for each player
     green = 0
     red = 0
     for col in board.keys():
@@ -504,7 +499,7 @@ def end_turn():
     print("Turn ended")
 
 
-def can_capture():
+def can_capture():  # check if selected piece can make any more captures; if not, turn will end
     if data['sel_pod'] == ['', '']:
         return False
     col = data['sel_pod'][0]
