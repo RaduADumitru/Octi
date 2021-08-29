@@ -94,7 +94,7 @@ WINNER_RED = font2.render('RED WINS!', True, RED)
 WINNER_RED_OUTLINE = font2.render('RED WINS!', True, BLACK)
 
 
-def draw_win_text(text): # draw outlined text upon win
+def draw_win_text(text):  # draw outlined text upon win
     def draw1(x1, y1, drawn_text, window):
         textbox = drawn_text.get_rect()
         textbox.center = (x1, y1)
@@ -200,18 +200,29 @@ def draw_prongs(col, line):  # place prong images on board
     if sel_col == col and sel_line == line:
         selected = True
     for pdir in DIRECTIONS:
-        if board[col][line]['prongs'][pdir]:
-            if not selected:
-                if col == mouse_col and line == mouse_line and sel_dir == 'pod':
-                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPOD_ALPHA)')
+        if valid_capture(mouse_col, mouse_line) == 'none':
+            if board[col][line]['prongs'][pdir]:
+                if not selected:
+                    if col == mouse_col and line == mouse_line and sel_dir == 'pod':
+                        exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPOD_ALPHA)')
+                    else:
+                        exec('WIN.blit(' + DIR_DATA[pdir] + ')')
                 else:
-                    exec('WIN.blit(' + DIR_DATA[pdir] + ')')
-            else:
-                exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_SELECT_ALPHA)')
-        elif pdir == sel_dir:
-            if col == mouse_col and line == mouse_line:
-                if not data['capturing']:
-                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPLACEMENT_ALPHA)')
+                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_SELECT_ALPHA)')
+            elif pdir == sel_dir:
+                if col == mouse_col and line == mouse_line:
+                    if not data['capturing']:
+                        exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPLACEMENT_ALPHA)')
+        else:
+            if board[col][line]['prongs'][pdir]:
+                if not selected:
+                    if col == mouse_col and line == mouse_line:
+                        exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_HOVEROVERPOD_ALPHA)')
+                    else:
+                        exec('WIN.blit(' + DIR_DATA[pdir] + ')')
+                else:
+                    exec('blit_alpha(WIN, ' + DIR_DATA[pdir] + ', PRONG_SELECT_ALPHA)')
+
     return
 
 
@@ -236,13 +247,22 @@ def draw_pods():  # place pod images on board
                 selected = False
                 if col == sel_col and line == sel_line:
                     selected = True
-                if not selected:
-                    if col == mouse_col and line == mouse_line and selection() == 'pod':
-                        blit_alpha(WIN, pod, (x, y), POD_HOVER_ALPHA)
+                if valid_capture(mouse_col, mouse_line) == 'none':
+                    if not selected:
+                        if col == mouse_col and line == mouse_line and selection() == 'pod':
+                            blit_alpha(WIN, pod, (x, y), POD_HOVER_ALPHA)
+                        else:
+                            WIN.blit(pod, (x, y))
                     else:
-                        WIN.blit(pod, (x, y))
+                        blit_alpha(WIN, pod, (x, y), POD_SELECT_ALPHA)
                 else:
-                    blit_alpha(WIN, pod, (x, y), POD_SELECT_ALPHA)
+                    if not selected:
+                        if col == mouse_col and line == mouse_line:
+                            blit_alpha(WIN, pod, (x, y), POD_HOVER_ALPHA)
+                        else:
+                            WIN.blit(pod, (x, y))
+                    else:
+                        blit_alpha(WIN, pod, (x, y), POD_SELECT_ALPHA)
 
 
 def draw_board():  # draw game board
@@ -387,6 +407,8 @@ def move_capture(pdir):  # move piece in a given direction when capturing
 def valid_capture(col, line):  # check if selected piece can make a capture on given position
     last_col = data['sel_pod'][0]
     last_line = data['sel_pod'][1]
+    if last_col not in 'ABCDEF' or last_line not in '1234567' or last_col == '' or last_line == '':
+        return 'none'
     pod_col = ord(data['sel_pod'][0])
     pod_line = ord(data['sel_pod'][1])
     square_col = ord(col)
@@ -528,7 +550,7 @@ def move_pod(dest_col, dest_line):
         data['capturing'] = True
         move_capture(cap_dir)
     elif valid_move():
-        if not data['capturing']:  # TODO: can't jump over own pieces if selecting middle of captured piece
+        if not data['capturing']:
             board[dest_col][dest_line] = pod
             board[col][line] = {}
         end_turn()
@@ -567,9 +589,10 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if sel not in ('none', 'pod'):
                     if not data['capturing'] and not board[col][line]['prongs'][sel]:
-                        board[col][line]['prongs'][sel] = True
-                        end_turn()
-                elif sel == 'pod' and not data['capturing']:
+                        if valid_capture(col, line) == 'none':
+                            board[col][line]['prongs'][sel] = True
+                            end_turn()
+                elif sel == 'pod' and not data['capturing'] and valid_capture(col, line) == 'none':
                     selected = True
                     data['sel_pod'] = [col, line]
                     print(f'Pod {col}{line} selected')
